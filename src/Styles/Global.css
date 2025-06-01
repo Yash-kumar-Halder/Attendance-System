@@ -40,5 +40,13 @@
     background-color: #ad4343;
 }
 
+.gradient-btn {
+    background: linear-gradient(90deg, #9e00a3,#6300a5, #0011ad);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
 
   

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../hooks/index.js";
 import { setUser } from "@/Redux/Slices/User/user.js";
+import { toast } from "sonner";
+import { Toaster } from "../ui/sonner.jsx";
 const Login = () => {
 
     const user = useAppSelector((state) => state.user);
@@ -32,56 +34,52 @@ const Login = () => {
         // Handle the response as needed
         if (response.data) {
             // Redirect or perform other actions on successful login
-            
+
             dispatch(setUser(response.data.user));
-            navigate("/home");
+            navigate("/home", { replace: true, state: { fromLogin: true } });
         } else {
             console.error("Login failed:", response.data.message);
         }
-
     }
 
     return (
-        <div>
-            <div className="flex items-center justify-center h-screen bg-gray-200">
-                <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-                    <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
-                    <form>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="email">Email</label>
-                            <input
-                                name="email"
-                                onChange={handleChange}
-                                value={data.email}
-                                type="email"
-                                id="email"
-                                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-500"
-                                placeholder="Enter your email"
-                                required
-                            />
-                        </div>
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="password">Password</label>
-                            <input
-                                name="password"
-                                onChange={handleChange}
-                                value={data.password}
-                                type="password"
-                                id="password"
-                                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-blue-500"
-                                placeholder="Enter your password"
-                                required
-                            />
-                        </div>
-                        <button
-                            onClick={loginHandler}
-                            type="submit"
-                            className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition duration-200"
-                        >
-                            Login
-                        </button>
-                    </form>
-                </div>
+        <div className="flex items-center justify-center h-screen bg-[#313131]">
+            <div className="w-full max-w-md p-8 bg-[#313131] rounded-lg shadow-[black] shadow-xl login-card border border-stone-700">
+                <h2 className="text-2xl font-bold text-center text-stone-100 mb-6">Login</h2>
+                <form onSubmit={loginHandler} className="w-full flex flex-col items-center justify-center-center">
+                    <div className="mb-4 w-full">
+                        <label className="w-full text-sm font-medium text-stone-300 mb-2" htmlFor="email">Email</label>
+                        <input
+                            name="email"
+                            onChange={handleChange}
+                            value={data.email}
+                            type="email"
+                            id="email"
+                            className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-stone-300 active:bg-black "
+                            placeholder="Enter your email"
+                            required
+                        />
+                    </div>
+                    <div className="mb-6 w-full">
+                        <label className="w-full text-sm font-medium text-stone-300 mb-2" htmlFor="password">Password</label>
+                        <input
+                            name="password"
+                            onChange={handleChange}
+                            value={data.password}
+                            type="password"
+                            id="password"
+                            className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 text-stone-300"
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="w-fit px-8 py-2 text-white font-semibold rounded hover:bg-blue-700 transition duration-200 gradient-btn"
+                    >
+                        Login
+                    </button>
+                </form>
             </div>
         </div>
     )

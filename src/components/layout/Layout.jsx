@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import Footer from './Footer'
@@ -10,7 +10,8 @@ import CircleProgressBar from '../CircleProgressBar'
 // import { Bar, BarChart } from 'recharts'
 // import { ChartConfig} from "@/components/ui/chart"
 import { useAppSelector, useAppDispatch } from "../../hooks/index.js"
-import { setUser } from "../../Redux/Slices/User/user.js"
+import { Toaster } from '../ui/sonner'
+import { toast } from 'sonner'
 
 
 
@@ -19,23 +20,12 @@ const Layout = () => {
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
-
     const [isSidebarActive, setIsSidebarActive] = useState(true);
 
     const handleSidebarToggle = () => {
         setIsSidebarActive(!isSidebarActive);
     }
 
-
-    // const chartData = [
-    //     { month: "January", desktop: 186, mobile: 80 },
-    //     { month: "February", desktop: 305, mobile: 200 },
-    //     { month: "March", desktop: 237, mobile: 120 },
-    //     { month: "April", desktop: 73, mobile: 190 },
-    //     { month: "May", desktop: 209, mobile: 130 },
-    //     { month: "June", desktop: 214, mobile: 140 },
-    // ]
-      
 
 
     return (
@@ -46,6 +36,7 @@ const Layout = () => {
         // </div>
 
         <div className='bg-[#0e0e0e] ' >
+            <Toaster />
             <SidebarProvider>
                 <AppSidebar />
                 <main className='w-full  h-[200vh]' >
@@ -64,13 +55,13 @@ const Layout = () => {
 
                         </div>
                         <div className='w-[27%] aspect-[3/1.8] bg-gray-700 rounded-md my-[1.5%]  ' >
-                            
+
                         </div>
                         <div className='w-[27%] aspect-[3/1.8] bg-gray-700 rounded-md my-[1.5%]  ' ></div>
                         <div className='w-[60%] aspect-[3/1.4] bg-gray-700 rounded-md my-[1.5%]  ' ></div>
                         <div className='w-[36%] aspect-[3/1.4] bg-gray-700 rounded-md my-[1.5%]  ' ></div>
                     </div>
-                <Outlet />
+                    <Outlet />
                 </main>
             </SidebarProvider>
         </div>
