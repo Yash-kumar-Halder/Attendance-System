@@ -41,7 +41,7 @@ const CircleProgressBar = ({
     return (
         <div className="w-full h-full flex gap-[8%] items-center justify-center px-4 py-2 ">
             <div className='flex flex-col items-center justify-center' >
-                <div className="text-xl font-semibold text-gray-200 mb-2">Attendance</div>
+                <div className="text-xl font-semibold text-[var(--white-7)] mb-2">Attendance</div>
                 <div className="relative w-40 h-40">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                         {/* Base Circle - full ring */}

@@ -35,7 +35,7 @@ const Login = () => {
 
             if (response.data.success) {
                 dispatch(setUser(response.data.user));
-                navigate("/home");
+                navigate("/dashboard");
             }
         } catch (error) {
             // Axios errors are here when status is not 2xx

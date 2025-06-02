@@ -16,55 +16,54 @@ import { Settings, ChartColumnBig } from "lucide-react";
 export function AppSidebar() {
 
     const user = useAppSelector((state) => state.user);
-    console.log(user)
 
     const sidebarGroups = {
         teacher: [
             {
                 name: "Dashboard",
-                icon: <LayoutDashboard size={20} />,
-                link: "/home"
+                icon: <LayoutDashboard size={18} />,
+                link: "/dashboard"
             },
             {
                 name: "Active Classes",
-                icon: <Radiation size={20} />,
-                link: "/admin/dashboard"
+                icon: <Radiation size={18} />,
+                link: "/classes"
             },
             {
                 name: "LeaderBoard",
-                icon: <ChartColumnBig size={20} />,
+                icon: <ChartColumnBig size={18} />,
                 link: "/admin/users"
             },
             {
                 name: "Filter",
-                icon: <ArrowDown01 size={20} />,
+                icon: <ArrowDown01 size={18} />,
                 link: "/admin/users"
             },
             {
                 name: "Users",
-                icon: <Users size={20} />,
+                icon: <Users size={18} />,
                 link: "/admin/users"
             },
             {
                 name: "Shedule Classes",
-                icon: <CalendarCheck2 size={20} />,
+                icon: <CalendarCheck2 size={18} />,
                 link: "/admin/users"
             },
             {
                 name: "Subjects",
-                icon: <NotebookTabs size={20} />,
+                icon: <NotebookTabs size={18} />,
                 link: "/admin/users"
             },
         ],
         student: [
             {
                 name: "Profile",
-                icon: <Sun size={20} />,
+                icon: <Sun size={18} />,
                 link: "/user/profile"
             },
             {
                 name: "Settings",
-                icon: <Settings size={20} />,
+                icon: <Settings size={18} />,
                 link: "/user/settings"
             }
         ]
@@ -72,7 +71,7 @@ export function AppSidebar() {
 
     return (
         <Sidebar collapsible="icon" >
-            <SidebarHeader className='bg-gray-600 h-10 py-0 px-1' >
+            <SidebarHeader className='bg-[var(--bg-primary)] h-10 py-0 px-1 border-b border-[var(--white-3)] shadow-xs ' >
                 <SidebarContent>
                     <SidebarMenu className='h-10 flex justify-center' >
                         <SidebarMenuButton className='hover:bg-transparent content-center py-0 flex items-center' >
@@ -93,12 +92,12 @@ export function AppSidebar() {
                                 key={index}
                                 to={item.link}
                                 className={({ isActive }) =>
-                                    `${isActive ? "text-amber-300" : "text-stone-400"} flex items-center gap-2 text-nowrap`
+                                    `${isActive ? "text-amber-500 hover:bg-[var(--sidebar-link-a-bg)] font-semibold hover:font-extrabold hover:text-amber-6  00" : "text-[var(--white-7)] hover:font-semibold hover:text-[var(--white-9)] hover:bg-[var(--white-4)]"} flex items-center gap-2 text-nowrap  `
                                 }
                           >
-                                <SidebarMenuButton className='hover:bg-stone-800 hover:text-amber-200 hover:font-semibold cursor-pointer' >
-                                    <span className="font-light ml-0.5" >{item.icon}</span>
-                                    <span className="text-[16px] font-medium">{item.name}</span>
+                                <SidebarMenuButton className='cursor-pointer rounded-none' >
+                                    <span className="ml-[5px]" >{item.icon}</span>
+                                    <p className="text-[16px]">{item.name}</p>
                                 </SidebarMenuButton>
                             </NavLink>
                         ))}

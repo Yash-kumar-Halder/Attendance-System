@@ -1,20 +1,32 @@
-import { CloudMoon, CloudSun, ScanText } from 'lucide-react'
-import { toggleTheme } from '@/Utils/ToggleTheme';
 import { Link } from 'react-router-dom';
 import Newbadge from '../Newbadge';
 import { useAppSelector, useAppDispatch } from '@/hooks';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { clearUser } from '@/Redux/Slices/User/user';
+import { toggleTheme } from '@/Redux/Slices/User/theme';
 
 
 const Header = () => {
 
 
+    const [theme, setTheme] = useState(useAppSelector((state) => state.theme));
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+    }, [theme]);
+
+    const toggle = () => {
+        const newTheme = theme === "light" ? "dark" : "light";
+        setTheme(newTheme);
+        dispatch(toggleTheme());
+    };
+
+
 
     const navigate = useNavigate();
     const user = useAppSelector((state) => state.user);
-    const dispatch = useAppDispatch();
+    
 
     const headerData = [
         {
@@ -40,7 +52,7 @@ const Header = () => {
     }, [])
 
     return (
-        <div className='sticky w-full h-10 bg-[#000] top-0  flex items-center justify-between px-8 text-white z-10' >
+        <div className='sticky w-full h-10 bg-[var(--header)] top-0  flex items-center justify-between px-8 text-[var(--text-primary)] z-10' >
             <div className="w-{50%} h-full content-center cursor-pointer ">
                 BGP
             </div>
@@ -49,7 +61,7 @@ const Header = () => {
                 <Newbadge />
                 {user.isAuthenticated ? (
                     <>
-                        {headerData.map((item, index) => (
+                        {/* {headerData.map((item, index) => (
                             <Link
                                 key={index}
                                 to={item.link}
@@ -59,7 +71,30 @@ const Header = () => {
                             </Link>
 
                         )
-                        )}
+                        )} */}
+                        <button
+                            onClick={toggle}
+                            className='flex items-center gap-1 hover:text-amber-600 transition-all duration-300 ease-in-out cursor-pointer '
+                        >
+                            {theme === "light" ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-sun">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-moon cursor-pointer">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                </svg>
+                            )}
+                        </button>
+
                         <button
                             onClick={() => {
                                 dispatch(clearUser());
@@ -87,6 +122,28 @@ const Header = () => {
                             >
                                 Login
                             </Link>
+                            <button
+                                onClick={toggle}
+                                className='flex items-center gap-1 hover:text-amber-600 transition-all duration-300 ease-in-out cursor-pointer '
+                            >
+                                {theme === "light" ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-sun">
+                                        <circle cx="12" cy="12" r="5"></circle>
+                                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-moon cursor-pointer">
+                                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                    </svg>
+                                )}
+                            </button>
                         </>
 
                     )
