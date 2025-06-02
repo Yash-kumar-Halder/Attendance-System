@@ -42,7 +42,7 @@ const Header = () => {
     return (
         <div className='sticky w-full h-10 bg-[#000] top-0  flex items-center justify-between px-8 text-white z-10' >
             <div className="w-{50%} h-full content-center cursor-pointer ">
-                Hello
+                BGP
             </div>
 
             <div className="w-[50%] flex items-center justify-end gap-4 text-amber-500 font-semibold  text-sm  ">

@@ -8,12 +8,67 @@ import {
     SidebarMenu,
     SidebarMenuButton,
 } from "@/components/ui/sidebar"
-import { Flame, LayoutDashboard, Sun } from "lucide-react"
+import { ArrowDown01, CalendarCheck2, Flame, LayoutDashboard, NotebookTabs, Radiation, Sun, Users } from "lucide-react"
 import { useAppSelector } from "../hooks/index.js"
+import { Link, NavLink } from "react-router-dom";
+import { Settings, ChartColumnBig } from "lucide-react";
 
 export function AppSidebar() {
 
     const user = useAppSelector((state) => state.user);
+    console.log(user)
+
+    const sidebarGroups = {
+        teacher: [
+            {
+                name: "Dashboard",
+                icon: <LayoutDashboard size={20} />,
+                link: "/home"
+            },
+            {
+                name: "Active Classes",
+                icon: <Radiation size={20} />,
+                link: "/admin/dashboard"
+            },
+            {
+                name: "LeaderBoard",
+                icon: <ChartColumnBig size={20} />,
+                link: "/admin/users"
+            },
+            {
+                name: "Filter",
+                icon: <ArrowDown01 size={20} />,
+                link: "/admin/users"
+            },
+            {
+                name: "Users",
+                icon: <Users size={20} />,
+                link: "/admin/users"
+            },
+            {
+                name: "Shedule Classes",
+                icon: <CalendarCheck2 size={20} />,
+                link: "/admin/users"
+            },
+            {
+                name: "Subjects",
+                icon: <NotebookTabs size={20} />,
+                link: "/admin/users"
+            },
+        ],
+        student: [
+            {
+                name: "Profile",
+                icon: <Sun size={20} />,
+                link: "/user/profile"
+            },
+            {
+                name: "Settings",
+                icon: <Settings size={20} />,
+                link: "/user/settings"
+            }
+        ]
+    }
 
     return (
         <Sidebar collapsible="icon" >
@@ -33,12 +88,20 @@ export function AppSidebar() {
                 <SidebarGroup />
                 <SidebarGroupContent>
                     <SidebarMenu>
-                        <SidebarMenuButton className='hover:bg-gray-700 cursor-pointer' >
-                            <a href="#" className="flex items-center gap-3 text-gray-300" >
-                                <LayoutDashboard size='24' />
-                                <span className="text-[22px]" >Hello</span>
-                            </a>
-                        </SidebarMenuButton>
+                        {sidebarGroups[user.role]?.map((item, index) => (
+                            <NavLink
+                                key={index}
+                                to={item.link}
+                                className={({ isActive }) =>
+                                    `${isActive ? "text-amber-300" : "text-stone-400"} flex items-center gap-2 text-nowrap`
+                                }
+                          >
+                                <SidebarMenuButton className='hover:bg-stone-800 hover:text-amber-200 hover:font-semibold cursor-pointer' >
+                                    <span className="font-light ml-0.5" >{item.icon}</span>
+                                    <span className="text-[16px] font-medium">{item.name}</span>
+                                </SidebarMenuButton>
+                            </NavLink>
+                        ))}
                     </SidebarMenu>
                 </SidebarGroupContent>
                 <SidebarGroup />

@@ -18,7 +18,7 @@ import { toast } from 'sonner'
 const Layout = () => {
 
     const user = useAppSelector((state) => state.user);
-    const dispatch = useAppDispatch();
+    // const dispatch = useAppDispatch();
 
     const [isSidebarActive, setIsSidebarActive] = useState(true);
 
