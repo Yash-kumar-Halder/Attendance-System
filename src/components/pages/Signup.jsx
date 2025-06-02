@@ -93,7 +93,7 @@ const Signup = () => {
                 "http://localhost:8000/api/v1/auth/register",
                 data
             );
-            if (response.data?.user) {
+            if (response.data.success) {
                 dispatch(setUser(response.data.user));
                 navigate("/home", { replace: true, state: { fromLogin: true } });
             } else {

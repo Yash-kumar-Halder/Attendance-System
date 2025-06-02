@@ -26,24 +26,28 @@ const Login = () => {
 
     const loginHandler = async (e) => {
         e.preventDefault();
-        // Handle login logic here
-        const response = await axios.post(
-            "http://localhost:8000/api/v1/auth/login",
-            data
-        );
-        // Handle the response as needed
-        if (response.data) {
-            // Redirect or perform other actions on successful login
 
-            dispatch(setUser(response.data.user));
-            navigate("/home", { replace: true, state: { fromLogin: true } });
-        } else {
-            console.error("Login failed:", response.data.message);
+        try {
+            const response = await axios.post(
+                "http://localhost:8000/api/v1/auth/login",
+                data
+            ); 
+
+            if (response.data.success) {
+                dispatch(setUser(response.data.user));
+                navigate("/home");
+            }
+        } catch (error) {
+            // Axios errors are here when status is not 2xx
+            const errorMsg = error.response?.data?.message || "Login failed";
+            toast.error(errorMsg);
+            console.error("Login failed:", errorMsg);
         }
-    }
+    };    
 
     return (
         <div className="flex items-center justify-center h-screen bg-[#313131]">
+            <Toaster />
             <div className="w-full max-w-md p-8 bg-[#313131] rounded-lg shadow-[black] shadow-xl login-card border border-stone-700">
                 <h2 className="text-2xl font-bold text-center text-stone-100 mb-6">Login</h2>
                 <form onSubmit={loginHandler} className="w-full flex flex-col items-center justify-center-center">
