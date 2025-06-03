@@ -106,53 +106,53 @@ const Signup = () => {
     }
 
     return (
-        <div className="flex items-center justify-center h-screen bg-[#313131]">
+        <div className="flex items-center justify-center h-screen bg-[var(--bg)]">
             <Toaster />
-            <div className="w-full max-w-md p-8 bg-[#313131] rounded-lg shadow-[black] shadow-xl login-card border border-stone-700">
-                <h2 className="text-2xl font-bold text-center text-stone-100 mb-6">Signup</h2>
+            <div className="w-full max-w-md p-8 bg-[var(--white-2)] rounded-lg shadow-[#383838] shadow-xl login-card border border-stone-700">
+                <h2 className="text-2xl font-bold text-center text-[var(--white-8)] mb-6">Signup</h2>
                 <form onSubmit={signupHandler} className="w-full flex flex-col items-center justify-center-center">
                     <div className="mb-4 w-full">
-                        <label className="w-full text-sm font-medium text-stone-300 mb-2" htmlFor="email">Name</label>
+                        <label className="w-full text-sm font-medium text-[var(--white-7)] mb-2" htmlFor="email">Name</label>
                         <input
                             name="name"
                             onChange={handleChange}
                             value={data.name}
                             type="text"
                             id="name"
-                            className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-stone-300 active:bg-black "
+                            className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-[var(--white-8)] active:bg-black "
                             placeholder="Enter your name"
                             required
                         />
                     </div>
                     <div className="mb-4 w-full">
-                        <label className="w-full text-sm font-medium text-stone-300 mb-2" htmlFor="email">Email</label>
+                        <label className="w-full text-sm font-medium text-[var(--white-7)] mb-2" htmlFor="email">Email</label>
                         <input
                             name="email"
                             onChange={handleChange}
                             value={data.email}
                             type="email"
                             id="email"
-                            className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-stone-300 active:bg-black "
+                            className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-[var(--white-8)] active:bg-black "
                             placeholder="Enter your email"
                             required
                         />
                     </div>
                     <div className="mb-4 w-full flex items-end gap-3">
                        <div>
-                            <label className="w-full text-sm font-medium text-stone-300 mb-2" htmlFor="number">Phone number</label>
+                            <label className="w-full text-sm font-medium text-[var(--white-7)] mb-2" htmlFor="number">Phone number</label>
                             <input
                                 name="phoneNo"
                                 onChange={handleChange}
                                 value={data.phoneNo}
                                 type="number"
                                 id="phoneNo"
-                                className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-stone-300 active:bg-black "
+                                className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-[var(--white-8)] active:bg-black "
                                 placeholder="Enter your phone number"
                                 required
                             />
                        </div>
                         <Select value={data.role} onValueChange={(e) => handleSelectChange("role",e)} >
-                            <SelectTrigger className="w-[180px] rounded-[4px] py-[20px] border border-stone-400 text-stone-400 placeholder:text-stone-100">
+                            <SelectTrigger className="w-[180px] h-10 rounded-[4px] py-[20px] border border-stone-400 text-[var(--white-8)] placeholder:text-stone-100">
                                 <SelectValue placeholder="Role" />
                             </SelectTrigger>
                             <SelectContent className="bg-[#111] text-stone-300">
@@ -163,14 +163,14 @@ const Signup = () => {
                     </div>
 
                     <div className="mb-6 w-full">
-                        <label className="w-full text-sm font-medium text-stone-300 mb-2" htmlFor="password">Password</label>
+                        <label className="w-full text-sm font-medium text-[var(--white-7)] mb-2" htmlFor="password">Password</label>
                         <input
                             name="password"
                             onChange={handleChange}
                             value={data.password}
                             type="password"
                             id="password"
-                            className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 text-stone-300"
+                            className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 text-[var(--white-8)]"
                             placeholder="Enter your password"
                             required
                         />
@@ -178,7 +178,7 @@ const Signup = () => {
                     <div className="mb-4 w-full flex items-end gap-3">
                         <div>
                             <Select onValueChange={(e) => handleSelectChange("department",e)} >
-                                <SelectTrigger className="w-[180px] rounded-[4px] py-[20px] border border-stone-400 text-stone-400 placeholder:text-stone-100">
+                                <SelectTrigger className="w-[180px] h-10 rounded-[4px] py-[20px] border border-stone-400 text-[var(--white-8)] placeholder:text-stone-100">
                                     <SelectValue placeholder="Department" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-[#111] text-stone-300">
@@ -191,7 +191,7 @@ const Signup = () => {
                             </Select>
                         </div>
                         <Select onValueChange={(e) => handleSelectChange("semester",e)}>
-                            <SelectTrigger className="w-[180px] rounded-[4px] py-[20px] border border-stone-400 text-stone-400 placeholder:text-stone-100 ">
+                            <SelectTrigger className="w-[180px] h-10 rounded-[4px] py-[20px] border border-stone-400 text-[var(--white-8)] placeholder:text-stone-100 ">
                                 <SelectValue placeholder="Semester" />
                             </SelectTrigger>
                             <SelectContent className="bg-[#111] text-stone-300">
@@ -205,14 +205,14 @@ const Signup = () => {
                         </Select>
                     </div>
                     <div className="mb-4 w-full">
-                            <label className="w-full text-sm font-medium text-stone-300 mb-2" htmlFor="email">Registration number</label>
+                        <label className="w-full text-sm font-medium text-[var(--white-7)] mb-2" htmlFor="email">Registration number</label>
                             <input
                                 name="regNo"
                                 onChange={handleChange}
                             value={data.regNo}
                                 type="text"
                                 id="regNo"
-                                className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-stone-300 active:bg-black "
+                            className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-[var(--white-8)] active:bg-black "
                             placeholder="Enter your registration number"/>
                     </div>
                     <button

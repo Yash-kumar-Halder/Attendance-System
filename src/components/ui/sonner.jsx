@@ -12,9 +12,9 @@ const Toaster = ({
       className="toaster group"
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)"
+          "--normal-bg": "var(--white-1)",
+          "--normal-text": "var(--white-9)",
+          "--normal-border": "var(--white-4)"
         }
       }
       {...props} />

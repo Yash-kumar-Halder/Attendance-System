@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { clearUser } from '@/Redux/Slices/User/user';
 import { toggleTheme } from '@/Redux/Slices/User/theme';
+import { toast } from 'sonner';
 
 
 const Header = () => {
@@ -99,6 +100,7 @@ const Header = () => {
                             onClick={() => {
                                 dispatch(clearUser());
                                 navigate("/");
+                                toast.success("Logout successfully");
                             }
                             }
                             className='border border-blue-600 text-blue-700 px-3 py-0.5 rounded-2xl text-sm hover:bg-blue-400 hover:text-blue-900 transition-transform active:scale-90 '
@@ -112,13 +114,13 @@ const Header = () => {
                         <>
                             <Link
                                 to="/signup"
-                                className='border border-blue-600 text-blue-700 px-3 py-0.5 rounded-2xl text-sm hover:bg-blue-400 hover:text-blue-900 transition-transform active:scale-90 '
+                                className='border border-blue-600 text-blue-700 px-3 py-0.5 rounded-2xl text-sm hover:bg-blue-400 hover:text-white transition-transform active:scale-90 '
                             >
                                 Signup
                             </Link>
                             <Link
                                 to="/login"
-                                className='border border-gray-400 text-white px-3 py-0.5 rounded-2xl text-sm hover:bg-white hover:text-black transition-transform active:scale-90 '
+                                className='border border-gray-400 text-[var(--white-8)] px-3 py-0.5 rounded-2xl text-sm hover:bg-[var(--white-9)] hover:text-[var(--white-1)] transition-transform active:scale-90 '
                             >
                                 Login
                             </Link>

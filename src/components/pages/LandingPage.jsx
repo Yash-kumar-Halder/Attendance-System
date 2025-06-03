@@ -20,9 +20,9 @@ const LandingPage = () => {
 
         <>
             {/* If user is not logged in, show the landing page */}
-            <div className='w-full min-h-screen bg-black flex  justify-center ' >
+            <div className='w-full min-h-screen bg-[var(--bg))] flex  justify-center ' >
                 <div className='flex flex-col items-center justify-start text-center mt-[35vh]' >
-                    <h1 className='text-[5vw] text-coolHeading tracking-wide leading-[4.5vw] text-white ' >Smart Attendance System <br /> Powered by
+                    <h1 className='text-[5vw] text-coolHeading tracking-wide leading-[4.5vw] text-[var(--white-9)] ' >Smart Attendance System <br /> Powered by
                         [
                         <span className='text-headline font-extrabold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent tracking-normal ' > Face Recognition </span>
                         ] Technology</h1>

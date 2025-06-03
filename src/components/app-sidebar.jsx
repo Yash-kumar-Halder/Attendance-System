@@ -32,7 +32,7 @@ export function AppSidebar() {
             {
                 name: "LeaderBoard",
                 icon: <ChartColumnBig size={18} />,
-                link: "/admin/users"
+                link: "/leaderboard"
             },
             {
                 name: "Filter",
@@ -75,9 +75,9 @@ export function AppSidebar() {
                 <SidebarContent>
                     <SidebarMenu className='h-10 flex justify-center' >
                         <SidebarMenuButton className='hover:bg-transparent content-center py-0 flex items-center' >
-                            <a href="#" className="flex h-10 gap-2.5 items-center text-[#ef50f5] " >
+                            <a href="#" className="flex h-6 gap-2.5 items-center text-[#ef50f5] " >
                                 <Flame className="stroke-[2]" size='20' />
-                                <h2 className="text-headline font-medium bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent tracking-wider text-nowrap " >{user.user}</h2>
+                                <h2 className="text-headline font-medium bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent tracking-wider text-nowrap uppercase" >{user.user}</h2>
                             </a>
                         </SidebarMenuButton>
                     </SidebarMenu>
@@ -92,11 +92,11 @@ export function AppSidebar() {
                                 key={index}
                                 to={item.link}
                                 className={({ isActive }) =>
-                                    `${isActive ? "text-amber-500 hover:bg-[var(--sidebar-link-a-bg)] font-semibold hover:font-extrabold hover:text-amber-6  00" : "text-[var(--white-7)] hover:font-semibold hover:text-[var(--white-9)] hover:bg-[var(--white-4)]"} flex items-center gap-2 text-nowrap  `
+                                    `${isActive ? "text-amber-500 hover:bg-[var(--sidebar-link-a-bg)] font-semibold hover:font-extrabold hover:text-amber-6  00" : "text-[var(--white-7)] hover:font-semibold hover:text-[var(--white-9)] hover:bg-[var(--white-4)]"} flex items-center gap-2 text-nowrap rounded-md mx-1 px-0.5 `
                                 }
-                          >
-                                <SidebarMenuButton className='cursor-pointer rounded-none' >
-                                    <span className="ml-[5px]" >{item.icon}</span>
+                            >
+                                <SidebarMenuButton className='cursor-pointer rounded-lg' >
+                                    <span className="" >{item.icon}</span>
                                     <p className="text-[16px]">{item.name}</p>
                                 </SidebarMenuButton>
                             </NavLink>

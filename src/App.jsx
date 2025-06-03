@@ -11,6 +11,7 @@ import "./Styles/Root.css"
 import Header from './components/layout/Header'
 import LandingPage from './components/pages/LandingPage'
 import SidebarLayout from './components/layout/SidebarLayout'
+import Leaderboard from './components/pages/Leaderboard'
 
 
 function App() {
@@ -26,11 +27,13 @@ function App() {
             <Route index element={<LandingPage />} ></Route>
             <Route path='login' element={<Login />} ></Route>
             <Route path='signup' element={<Signup />} ></Route>
-          </Route>
-          <Route path='/' element={<><SidebarLayout /></>}  >
             <Route path='dashboard' element={<Dashboard />} ></Route>
+            <Route path='leaderboard' element={<Leaderboard />} ></Route>
             <Route path='classes' element={<Classes />} ></Route>
           </Route>
+          {/* <Route path='/' element={<><SidebarLayout /></>}  >
+            
+          </Route> */}
         </Routes>
       </BrowserRouter>
     </>
