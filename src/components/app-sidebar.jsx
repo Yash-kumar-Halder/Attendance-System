@@ -9,12 +9,13 @@ import {
     SidebarMenuButton,
 } from "@/components/ui/sidebar"
 import { ArrowDown01, CalendarCheck2, Flame, LayoutDashboard, NotebookTabs, Radiation, Sun, Users } from "lucide-react"
-import { useAppSelector } from "../hooks/index.js"
+import { useAppDispatch, useAppSelector } from "../hooks/index.js"
 import { Link, NavLink } from "react-router-dom";
 import { Settings, ChartColumnBig } from "lucide-react";
 
 export function AppSidebar() {
 
+    const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.user);
 
     const sidebarGroups = {
@@ -47,12 +48,12 @@ export function AppSidebar() {
             {
                 name: "Shedule Classes",
                 icon: <CalendarCheck2 size={18} />,
-                link: "/admin/users"
+                link: "/schedule-classes"
             },
             {
                 name: "Subjects",
                 icon: <NotebookTabs size={18} />,
-                link: "/admin/users"
+                link: "/add-subject"
             },
         ],
         student: [

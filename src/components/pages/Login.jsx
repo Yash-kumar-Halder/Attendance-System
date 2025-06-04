@@ -36,6 +36,8 @@ const Login = () => {
 
             if (response.data.success) {
                 dispatch(setUser(response.data.user));
+                const token = response.data.accessToken;
+                localStorage.setItem("accessToken", token);
                 navigate("/dashboard");
                 toast.success(`welcome back ${response.data.user.name}`);
             }
@@ -61,7 +63,7 @@ const Login = () => {
                             value={data.email}
                             type="email"
                             id="email"
-                            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-stone-300 active:bg-black "
+                            className="w-full px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)] "
                             placeholder="Enter your email"
                             required
                         />
@@ -74,7 +76,7 @@ const Login = () => {
                             value={data.password}
                             type="password"
                             id="password"
-                            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 text-stone-300 placeholder:text-stone-400"
+                            className="w-full px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-1)] text-[var(--white-8)] placeholder:text-[var(--white-6)]"
                             placeholder="Enter your password"
                             required
                         />

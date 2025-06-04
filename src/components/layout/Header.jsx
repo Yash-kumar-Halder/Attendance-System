@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import Newbadge from '../Newbadge';
 import { useAppSelector, useAppDispatch } from '@/hooks';
 import { useEffect, useState } from 'react';
@@ -48,9 +48,6 @@ const Header = () => {
         }
 
     ]
-    useEffect(() => {
-        !user.isAuthenticated && navigate("/");
-    }, [])
 
     return (
         <div className='sticky w-full h-10 bg-[var(--header)] top-0  flex items-center justify-between px-8 text-[var(--text-primary)] z-10' >
@@ -96,17 +93,19 @@ const Header = () => {
                             )}
                         </button>
 
-                        <button
-                            onClick={() => {
-                                dispatch(clearUser());
-                                navigate("/");
-                                toast.success("Logout successfully");
-                            }
-                            }
-                            className='border border-blue-600 text-blue-700 px-3 py-0.5 rounded-2xl text-sm hover:bg-blue-400 hover:text-blue-900 transition-transform active:scale-90 '
-                        >
-                            Logout
-                        </button>
+                        {/* <NavLink to="/login" > */}
+                            <button
+                                onClick={() => {
+                                    dispatch(clearUser());
+                                    navigate("/");
+                                    toast.success("Logout successfully");
+                                }
+                                }
+                                className='border border-blue-600 text-blue-700 px-3 py-0.5 rounded-2xl text-sm hover:bg-blue-400 hover:text-blue-900 transition-transform active:scale-90 '
+                            >
+                                Logout
+                            </button>
+                        {/* </NavLink> */}
                     </>
                 )
                     :

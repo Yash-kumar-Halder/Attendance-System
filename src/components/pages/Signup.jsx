@@ -95,7 +95,7 @@ const Signup = () => {
             );
             if (response.data.success) {
                 dispatch(setUser(response.data.user));
-                navigate("/home", { replace: true, state: { fromLogin: true } });
+                navigate("/home");
             } else {
                 toast.error(response.data?.message || "Signup failed");
             }

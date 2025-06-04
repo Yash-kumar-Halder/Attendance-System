@@ -1,6 +1,9 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import userReducer from "./Slices/User/user";
 import themeReducer from "./Slices/User/theme.js";
+import sidebarReducer from "./Slices/Application/sidebar.js";
+import subjectReducer from "./Slices/Application/subjects.js";
+
 import {
 	persistStore,
 	persistReducer,
@@ -16,12 +19,14 @@ import storage from "redux-persist/lib/storage";
 const rootReducer = combineReducers({
 	user: userReducer,
 	theme: themeReducer,
+	sidebar: sidebarReducer,
+	subject: subjectReducer,
 });
 
 const persistConfig = {
 	key: "root",
 	storage,
-	whitelist: ["user", "theme"], // only persist the user slice
+	whitelist: ["user", "theme", "sidebar", "subject"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

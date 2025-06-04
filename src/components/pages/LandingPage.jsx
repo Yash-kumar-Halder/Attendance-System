@@ -3,7 +3,6 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, Si
 import { Link } from 'react-router-dom';
 import { CalendarRange, ChevronUp, LayoutDashboard, Settings, User2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import AppSidebar from '../AppSidebar';
 
 
 const LandingPage = () => {

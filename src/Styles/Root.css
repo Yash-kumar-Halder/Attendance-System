@@ -1,5 +1,5 @@
 :root {
-	--bg: #eaeaea;
+	--bg: #ececec;
   --text-primary: #000;
   --text-secondary: #555;
 	--text-color: #333;
@@ -7,7 +7,8 @@
   --sidebar-link: rgb(255, 208, 0);
   --sidebar-link-a-bg: rgb(255, 242, 184);
   --active-card: #ffffff;
-  --card: #fff;
+  --card: #f8f8f8;
+  --hilited-card: #ffffff;
 
 	--primary-color: #3498db;
 	--secondary-color: #2ecc71;
@@ -29,7 +30,7 @@
 }
 
 [data-theme="dark"] {
-	--bg: #303030;
+	--bg: #111214;
   --text-primary: #f0f0f0;
   --text-secondary: #bbb;
 	--text-color: #ecf0f1;
@@ -37,7 +38,8 @@
   --sidebar-link: rgb(255, 208, 0);
   --sidebar-link-a-bg: rgb(61, 50, 0);
   --active-card: #252525;
-  --card: #000000;
+  --card: #1E2126;
+  --hilited-card: #282F35;
 
 	--secondary-color: #e74c3c;
 	--primary-color: #1abc9c;
