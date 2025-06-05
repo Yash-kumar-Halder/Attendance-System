@@ -38,6 +38,7 @@ const Subject = () => {
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
     const [deleteItem, setDeleteItem] = useState("");
+    const [scheduleItem, setScheduleItem] = useState("");
     const [data, setData] = useState({
         subject: "",
         code: "",
@@ -113,6 +114,14 @@ const Subject = () => {
         }));
     };
 
+    const handleScheduleSelectChange = (field, value) => {
+        setScheduleData((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+    
+
     const handleSelectChange = (type, value) => {
         setData((prev) => ({
             ...prev,
@@ -168,6 +177,53 @@ const Subject = () => {
             toast.error("Failed to delete subject");
         }
     };
+
+    const handleScheduleSubject = async (id) => {
+        try {
+            const updatedData = {
+                ...scheduleData,
+                subject: scheduleItem,
+            };
+
+            setScheduleData(updatedData); // ✅ still update the UI
+
+            const token = await getValidToken();
+            const response = await axios.post(
+                `http://localhost:8000/api/v1/shedule/set`,
+                updatedData, // ✅ send correct data
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                }
+            );
+
+            if (response.data.success) {
+                toast.success(response.data.message);
+            }
+        } catch (error) {
+            console.error("Schedule Error:", error);
+            toast.error("Failed to schedule subject");
+        }
+    };
+    
+
+    const timeOptions = Array.from({ length: 8 }, (_, hourIndex) => {
+        const hour = 10 + hourIndex;
+        return Array.from({ length: 6 }, (_, minIndex) => {
+            const minute = minIndex * 10;
+            if (hour === 17 && minute > 0) return null; // Only allow 17:00
+            const timeValue = `${hour}:${minute.toString().padStart(2, '0')}`;
+            return (
+                <SelectItem
+                    key={`${hour}-${minute}`}
+                    className="cursor-pointer hover:bg-[var(--white-2)] text-[var(--white-6)]"
+                    value={timeValue}
+                >
+                    {timeValue}
+                </SelectItem>
+            );
+        }).filter(Boolean);
+    }).flat();
 
     return (
         <div className="w-[100%] px-[2.5%] py-[1.5%]">
@@ -311,57 +367,64 @@ const Subject = () => {
                                     This action can be changeble. <br /> you can change it later after schedule.
                                 </AlertDialogDescription>
                                 <div className='flex  gap-5 items-center mb-6 ' >
-                                    <Select >
+                                    <Select value={scheduleData.day}
+                                        onValueChange={(e) => handleScheduleSelectChange("day", e)}>
                                         <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[120px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
                                             <SelectValue className="h-5" placeholder="Day" />
                                         </SelectTrigger>
                                         <SelectContent className="bg-[var(--white-1)] text-stone-300">
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="monday">Monday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="tuesday">Tuesday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="wednesday">Wednesday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="thrursday">Thrursday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="friday">Friday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="saturday">Saturday</SelectItem>
+                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Monday">Monday</SelectItem>
+                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Tuesday">Tuesday</SelectItem>
+                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Wednesday">Wednesday</SelectItem>
+                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Thrursday">Thrursday</SelectItem>
+                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Friday">Friday</SelectItem>
+                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Saturday">Saturday</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <div className='flex gap-3 items-center' >
-                                        <Select>
+                                        <Select
+                                            value={scheduleData.start}
+                                            onValueChange={(value) => handleScheduleSelectChange('startTime', value)}
+                                        >
                                             <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[90px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                                <SelectValue className="h-5" placeholder="Start" />
+                                                <SelectValue className="h-5" placeholder="Start Time" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-[var(--white-1)] text-stone-300 max-h-60 overflow-y-auto">
-                                                {Array.from({ length: 8 }, (_, hourIndex) => {
-                                                    const hour = 10 + hourIndex;
-                                                    return Array.from({ length: 6 }, (_, minIndex) => {
-                                                        const minute = minIndex * 10;
-                                                        if (hour === 17 && minute > 0) return null; // Only include 17:00, not 17:10 or more
-                                                        const timeValue = `${hour}:${minute.toString().padStart(2, '0')}`;
-                                                        return (
-                                                            <SelectItem
-                                                                key={timeValue}
-                                                                className="cursor-pointer hover:bg-[var(--white-2)] text-[var(--white-6)]"
-                                                                value={timeValue}
-                                                            >
-                                                                {timeValue}
-                                                            </SelectItem>
-                                                        );
-                                                    });
-                                                })}
+                                                {timeOptions}
                                             </SelectContent>
                                         </Select>
 
                                         <span className='text-[var(--white-7)] text-sm ' >To</span>
 
-                                        <Select>
+                                        {/* End Time Selector */}
+                                        <Select
+                                            value={scheduleData.end}
+                                            onValueChange={(value) => handleScheduleSelectChange('endTime', value)}
+                                        >
+                                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[90px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                                <SelectValue className="h-5" placeholder="End Time" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-[var(--white-1)] text-stone-300 max-h-60 overflow-y-auto">
+                                                {timeOptions}
+                                            </SelectContent>
+                                        </Select>
+
+                                        
+
+                                        {/* <Select
+                                            value={scheduleData.end}
+                                            onValueChange={(value) => handleScheduleSelectChange('end', value)}
+                                        >
                                             <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[90px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
                                                 <SelectValue className="h-5" placeholder="End" />
                                             </SelectTrigger>
+
                                             <SelectContent className="bg-[var(--white-1)] text-stone-300 max-h-60 overflow-y-auto">
                                                 {Array.from({ length: 8 }, (_, hourIndex) => {
                                                     const hour = 10 + hourIndex;
                                                     return Array.from({ length: 6 }, (_, minIndex) => {
                                                         const minute = minIndex * 10;
-                                                        if (hour === 17 && minute > 0) return null; // Only include 17:00, not 17:10 or more
+                                                        if (hour === 17 && minute > 0) return null; // Only allow 17:00
                                                         const timeValue = `${hour}:${minute.toString().padStart(2, '0')}`;
                                                         return (
                                                             <SelectItem
@@ -372,10 +435,10 @@ const Subject = () => {
                                                                 {timeValue}
                                                             </SelectItem>
                                                         );
-                                                    });
-                                                })}
+                                                    }).filter(Boolean);
+                                                }).flat()}
                                             </SelectContent>
-                                        </Select>
+                                        </Select> */}
                                     </div>
                                 </div>
                             </AlertDialogHeader>
@@ -388,7 +451,7 @@ const Subject = () => {
                                 <AlertDialogAction
                                     className="bg-red-600 cursor-pointer hover:bg-red-700"
                                     onClick={() => {
-                                        handleDeleteSubject(deleteItem);
+                                        handleScheduleSubject(scheduleItem);
                                         setOpenDeleteDialog(false);
                                     }}
                                 >
@@ -431,6 +494,7 @@ const Subject = () => {
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             onClick={() => {
+                                                setScheduleItem(e._id);
                                                 setOpenScheduleDialog(true);
                                             }}
                                             className="text-teal-500 hover:bg-teal-100 cursor-pointer">Schedule</DropdownMenuItem>
