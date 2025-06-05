@@ -6,42 +6,61 @@ import { toast } from 'sonner'
 import axios from 'axios'
 import { useAppSelector, useAppDispatch } from "../../hooks/index.js";
 import { setSubjects } from '@/Redux/Slices/Application/subjects'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { refreshTokenAndRetry } from '@/Utils/RefreshTokenAndRetry'
 
 
 
 const Subject = () => {
 
     const dispatch = useAppDispatch();
-    const allSubjects = useAppSelector((state) => state.subject?.subjects || []);
-    const [subjects, setLocalSubjects] = useState([]);
+    const reduxSubjects = useAppSelector((state) => state.subject.subjects || []); // from redux
+    const [subjects, setSubjectsLocal] = useState([]);
+
+    const [buttonState, setButtonState] = useState(true);
+    const token = localStorage.getItem("accessToken");
 
     useEffect(() => {
-        const fetchSubjects = async () => {
+        const fetchData = async () => {
             try {
-                // ✅ Get token from localStorage
-                const token = localStorage.getItem("accessToken");
-
-                const response = await axios.get("http://localhost:8000/api/v1/subject/get", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                // ✅ Axios auto-parses JSON response
-                const data = response.data;
-                // Optional: check if `data.subjects` or similar structure
-                dispatch(setSubjects(data.subjects));
+                const response = await axios.get(
+                    "http://localhost:8000/api/v1/subject/get",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        withCredentials: true,
+                    }
+                );
+                if (response.data.success === true) {
+                    dispatch(setSubjects(response.data.subjects));
+                    setSubjectsLocal(reduxSubjects);
+                    console.log(response.data);
+                }
             } catch (error) {
-                console.error("Fetch error:", error);
+                if (error.response?.status === 401 || error.response?.status === 403) {
+                    try {
+                        const newToken = await axios.get("http://localhost:8000/api/v1/auth/refresh-token", { withCredentials: true })
+                        console.log("Data: ", newToken.data.accessToken);
+                        localStorage.setItem("accessToken", newToken.data.accessToken);
+                        const response = await axios.get("http://localhost:8000/api/v1/subject/get", { withCredentials: true });
+                        console.log("Catch error: ", response.data);
+                    } catch (error) {
+                        console.log("Error:", error)
+                    }
+                }
+                console.log("User Effect error: ", error);
             }
-        };
-
-        fetchSubjects();
-    }, [dispatch]);
+        }
+        fetchData();
+    }, [])
 
     useEffect(() => {
-        setLocalSubjects(allSubjects);
-    }, [allSubjects]);
+        // Whenever reduxSubjects updates, update local state
+        setSubjectsLocal(reduxSubjects);
+    }, [reduxSubjects]);
+
+
 
     // sync local state with Redux state
     // useEffect(() => {
@@ -52,7 +71,9 @@ const Subject = () => {
     const [data, setData] = useState({
         subject: "",
         code: "",
-        teacher: ""
+        teacher: "",
+        department: "",
+        semester: ""
     })
 
     const handleChange = (e) => {
@@ -63,41 +84,61 @@ const Subject = () => {
         });
     }
 
+    const handleSelectChange = (type, value) => {
+        setData((prev) => ({
+            ...prev,
+            [type]: value
+        }));
+    }
+
     const subjectHandler = async (e) => {
         e.preventDefault();
-        const token = localStorage.getItem("accessToken"); // get token from storage
+        const token = localStorage.getItem("accessToken");
 
         try {
-            const response = await axios.post(
+            await axios.post(
                 "http://localhost:8000/api/v1/subject/set",
                 data,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
                     },
+                    withCredentials: true,
                 }
             );
 
-            if (response.data.success) {
-                const subjectsResponse = await axios.get(
-                    "http://localhost:8000/api/v1/subject/get",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-                console.log(subjectsResponse.data.subjects)
-                dispatch(setSubjects(subjectsResponse.data.subjects));
-            } else {
-                toast.error(response.data?.message || "Schedule failed");
+            // ✅ Refetch the subjects list after adding new subject
+            const response = await axios.get(
+                "http://localhost:8000/api/v1/subject/get",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    withCredentials: true,
+                }
+            );
+
+            if (response.data.success === true) {
+                dispatch(setSubjects(response.data.subjects));
+                toast.success("Subject added successfully!");
             }
+
+            // ✅ Optionally reset form
+            setData({
+                subject: "",
+                code: "",
+                teacher: "",
+                department: "",
+                semester: ""
+            });
+
         } catch (error) {
+            console.log(error);
             toast.error(error?.response?.data?.message || "Something went wrong");
-            console.error("Schedule error:", error);
         }
     };
+    
+
 
 
     return (
@@ -117,8 +158,8 @@ const Subject = () => {
                                 value={data.subject}
                                 type="text"
                                 id="subject"
-                                className="w-full px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)] "
-                                placeholder="Enter your email"
+                                className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)] "
+                                placeholder="Enter subject name"
                                 required
                             />
                         </div>
@@ -130,8 +171,8 @@ const Subject = () => {
                                 value={data.code}
                                 type="text"
                                 id="code"
-                                className="w-full px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)] "
-                                placeholder="Enter your email"
+                                className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)] "
+                                placeholder="Enter subject code"
                                 required
                             />
                         </div>
@@ -143,33 +184,65 @@ const Subject = () => {
                                 value={data.teacher}
                                 type="text"
                                 id="teacher"
-                                className="w-full px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)] "
-                                placeholder="Enter your email"
+                                className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)] "
+                                placeholder="Enter teacher's name"
                                 required
                             />
                         </div>
+                        {/* Here  */}
+                        <Select value={data.role} onValueChange={(e) => handleSelectChange("department", e)}>
+                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[300px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                <SelectValue className="h-5" placeholder="Dept" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[var(--white-1)] text-stone-300">
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="CST">CST</SelectItem>
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="CFS">CFS</SelectItem>
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="EE">EE</SelectItem>
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="ID">ID</SelectItem>
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="MTR">MTR</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select value={data.role} onValueChange={(e) => handleSelectChange("semester", e)} >
+                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[250px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                <SelectValue className="h-5" placeholder="Sem" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[var(--white-1)] text-stone-300">
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="1st">1st</SelectItem>
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="2nd">2nd</SelectItem>
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="3rd">3rd</SelectItem>
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="4th">4th</SelectItem>
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="5th">5th</SelectItem>
+                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="6th">6th</SelectItem>
+                            </SelectContent>
+                        </Select>
+
                     </div>
                     <div className="filter-container rounded-sm w-full flex items-center gap-3 mt-2">
                     </div>
                 </div>
-
-
                 <Button type="submit" className="mt-6 cursor-pointer active:scale-95 bg-emerald-600 hover:bg-emerald-400" >Add class</Button>
             </form>
+            {/* <div className='bg-green-400 px-3 py-1 w-fit rounded-md cursor-pointer' onClick={test}  >Dummy</div> */}
 
             <div className='mt-8 ' >
                 <h1 className='text-lg font-bold mb-4' >All Classes</h1>
                 <div className='flex flex-col gap-4 ' >
                     {subjects.map((e) => (
-                        <div key={e._id} className='w-full h-24 px-5 py-2 rounded-md bg-[var(--white-1)]' >
+                        <div key={e._id} className='w-full h-24 px-5 py-2 rounded-md bg-[var(--card)]' >
                             <div className='flex justify-between' >
-                                <div>
-                                    <h2 className='text-[var(--white-8)] flex items-center gap-1.5 font-extrabold' >{e.subject}<Coffee size="15" /> <span>{e.code}</span> </h2>
-                                    <h3>Teacher: {e.teacher}</h3>
+                                <div className='w-full' >
+                                    <div className='flex justify-between pr-5 w-full' >
+                                        <h2 className='text-[var(--white-8)] text-lg leading-3 mt-1.5 flex items-center gap-1.5 font-extrabold' >{e.subject}<Coffee size="15" />  </h2><span className='bg-[var(--white-4)] px-3 rounded-2xl text-[var(--white-7)] ' >{e.code}</span>
+                                    </div>
+                                    <h3 className='text-md text-[var(--white-8)] ' >Teacher: {e.teacher}</h3>
+                                    <div className='flex gap-2 text-xs' >
+                                        <span className='bg-emerald-300 px-3 rounded-2xl py-0.5' >{e.department}</span>
+                                        <span className='bg-teal-200 px-3 rounded-2xl py-0.5'>{e.semester}</span>
+                                    </div>
                                 </div>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Ellipsis className='cursor-pointer' />
+                                        <Ellipsis className='cursor-pointer text-[var(--white-9)] ' />
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
@@ -189,7 +262,7 @@ const Subject = () => {
                         </div>
                     ))}
                 </div>
-                
+
             </div>
         </div>
     )
