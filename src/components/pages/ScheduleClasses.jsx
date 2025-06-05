@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Coffee, Ellipsis, RefreshCcw, Search, User } from 'lucide-react'
 import { Button } from '../ui/button'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { toast } from 'sonner'
 import axios from 'axios'
+import { useAppDispatch, useAppSelector } from '@/hooks'
 
 const ScheduleClasses = () => {
 
@@ -16,6 +17,14 @@ const ScheduleClasses = () => {
         startTime: "",
         endTime: ""
     })
+
+    const subjects = useAppSelector((state) => state.subject);
+
+    useEffect(() => {
+        // Do something with `subjects`, like logging or triggering another effect
+        console.log(subjects);
+    }, [subjects]);
+    
 
     const handleSelectChange = (type, value) => {
         setData((prev) => ({
