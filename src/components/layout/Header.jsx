@@ -3,7 +3,7 @@ import Newbadge from '../Newbadge';
 import { useAppSelector, useAppDispatch } from '@/hooks';
 import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { clearUser } from '@/Redux/Slices/User/user';
+import { logout } from '@/Redux/Slices/User/user';
 import { toggleTheme } from '@/Redux/Slices/User/theme';
 import { toast } from 'sonner';
 
@@ -96,7 +96,7 @@ const Header = () => {
                         {/* <NavLink to="/login" > */}
                             <button
                                 onClick={() => {
-                                    dispatch(clearUser());
+                                dispatch(logout());
                                     navigate("/");
                                     toast.success("Logout successfully");
                                 }

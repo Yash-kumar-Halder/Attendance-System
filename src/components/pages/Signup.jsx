@@ -9,9 +9,10 @@ import {
 import axios from 'axios'
 import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../hooks/index.js";
-import { setUser } from "@/Redux/Slices/User/user.js";
+import { loginSuccess } from "@/Redux/Slices/User/user.js";
 import { toast } from 'sonner';
 import { Toaster } from '../ui/sonner';
+import { registerUser } from "../../Freatures/Auth/authService.js";
 
 const Signup = () => {
 
@@ -88,22 +89,29 @@ const Signup = () => {
 
     const signupHandler = async (e) => {
         e.preventDefault();
+
+        const validation = validateForm();
+        if (!validation.success) {
+            toast.error(validation.error);
+            return;
+        }
+
         try {
-            const response = await axios.post(
-                "http://localhost:8000/api/v1/auth/register",
-                data
-            );
-            if (response.data.success) {
-                dispatch(setUser(response.data.user));
-                navigate("/home");
+            const response = await registerUser(data);
+
+            if (response.success) {
+                dispatch(loginSuccess(response.user)); // use loginSuccess instead of setUser
+                localStorage.setItem("accessToken", response.accessToken);
+                toast.success(`Welcome ${response.user.name}`);
+                navigate("/dashboard");
             } else {
-                toast.error(response.data?.message || "Signup failed");
+                toast.error(response.message || "Signup failed");
             }
         } catch (error) {
             toast.error(error?.response?.data?.message || "Something went wrong");
             console.error("Signup error:", error);
-        }        
-    }
+        }
+    };
 
     return (
         <div className="flex items-center justify-center h-screen bg-[var(--bg)]">

@@ -2,10 +2,10 @@ import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../hooks/index.js";
-import { setUser } from "@/Redux/Slices/User/user.js";
+import { loginSuccess } from "@/Redux/Slices/User/user.js";
 import { toast } from "sonner";
 import { Toaster } from "../ui/sonner.jsx";
-import { Sun } from "lucide-react";
+import { loginUser } from "@/Freatures/Auth/authService.js";
 const Login = () => {
 
     const user = useAppSelector((state) => state.user);
@@ -29,22 +29,31 @@ const Login = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post(
-                "http://localhost:8000/api/v1/auth/login",
-                data,
-               { withCredentials: true}
-            ); 
+            const responseData = await loginUser(data); // ✅ uses instance with baseURL & credentials
 
-            if (response.data.success) {
-                dispatch(setUser(response.data.user));
-                const token = response.data.accessToken;
-                localStorage.setItem("accessToken", token);
+            const { user, accessToken } = responseData;
+
+            if (user && accessToken) {
+                dispatch(
+                    loginSuccess({
+                        name: user.name,
+                        email: user.email,
+                        regNo: user.regNo,
+                        role: user.role,
+                        accessToken: accessToken,
+                    })
+                );
+
+                localStorage.setItem("accessToken", accessToken); // optional: useful for page refresh access
+
                 navigate("/dashboard");
-                toast.success(`welcome back ${response.data.user.name}`);
+                toast.success(`Welcome back, ${user.name}`);
+            } else {
+                throw new Error("Invalid response from server.");
             }
         } catch (error) {
-            // Axios errors are here when status is not 2xx
-            const errorMsg = error.response?.data?.message || "Login failed";
+            const errorMsg =
+                error?.response?.data?.message || error.message || "Login failed";
             toast.error(errorMsg);
             console.error("Login failed:", errorMsg);
         }
