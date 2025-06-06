@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import { BookOpen, Coffee, Ellipsis, RefreshCcw, Search, User } from 'lucide-react'
+import { BookOpen, RefreshCcw, User } from 'lucide-react'
 import { Button } from '../ui/button'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { toast } from 'sonner'
 import axios from 'axios'
-import { useAppDispatch, useAppSelector } from '@/hooks'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { useAppSelector } from "../../hooks/index.js"
 
 const ScheduleClasses = () => {
+
+    const user = useAppSelector((state) => state.user);
     const [allSchedules, setAllSchedules] = useState([]);
     const [filters, setFilters] = useState({
         day: "",
@@ -20,7 +20,6 @@ const ScheduleClasses = () => {
     const getValidToken = async () => {
         let token = localStorage.getItem("accessToken");
         try {
-            // Try a dummy request to check token validity
             await axios.get("http://localhost:8000/api/v1/subject/get", {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
@@ -28,7 +27,6 @@ const ScheduleClasses = () => {
             return token;
         } catch (error) {
             if (error.response?.status === 401 || error.response?.status === 403) {
-                // Refresh token
                 try {
                     const refreshResponse = await axios.get(
                         "http://localhost:8000/api/v1/auth/refresh-token",
@@ -38,7 +36,6 @@ const ScheduleClasses = () => {
                     localStorage.setItem("accessToken", newToken);
                     return newToken;
                 } catch (refreshError) {
-                    // Handle refresh token failure - logout or notify user here if needed
                     toast.error("Session expired. Please login again.");
                     throw refreshError;
                 }
@@ -46,6 +43,49 @@ const ScheduleClasses = () => {
             throw error;
         }
     };
+
+    const fetchScheduleSubjects = async () => {
+        try {
+            const token = await getValidToken();
+            let response;
+
+            if (user.role === "student") {
+                response = await axios.post(
+                    "http://localhost:8000/api/v1/shedule/student/get",
+                    { user },
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                        withCredentials: true,
+                    }
+                );
+            } else {
+                response = await axios.post(
+                    "http://localhost:8000/api/v1/shedule/get",
+                    {},
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                        withCredentials: true,
+                    }
+                );
+            }
+
+            if (response.data.success) {
+                const filtered = filterSchedule(response.data.scheduleClasses, filters);
+                const sorted = sortScheduleByCurrentDay(filtered);
+                setAllSchedules(sorted);
+            }
+        } catch (error) {
+            console.error("Failed to fetch subjects", error);
+            toast.error("Failed to fetch subjects");
+        }
+    };
+
+    useEffect(() => {
+        if (user?.role) {
+            fetchScheduleSubjects();
+        }
+    }, [filters, user?.role]);
+
 
     const filterSchedule = (classes, filters) => {
         return classes.filter((item) => {
@@ -86,34 +126,6 @@ const ScheduleClasses = () => {
             return dayCompare;
         });
     };
-
-    // Fetch subjects
-    const fetchScheduleSubjects = async () => {
-        try {
-            const token = await getValidToken();
-            const response = await axios.post("http://localhost:8000/api/v1/shedule/get", {}, {
-                headers: { Authorization: `Bearer ${token}` },
-                withCredentials: true,
-            });
-
-            if (response.data.success) {
-                const filtered = filterSchedule(response.data.scheduleClasses, filters);
-
-                // Step 2: Sort upcoming first
-                const sorted = sortScheduleByCurrentDay(filtered);
-
-                setAllSchedules(sorted);
-            };
-        } catch (error) {
-            console.error("Failed to fetch subjects", error);
-            toast.error("Failed to fetch subjects");
-        }
-    };
-    // const subjects = useAppSelector((state) => state.subject);
-
-    useEffect(() => {
-        fetchScheduleSubjects();
-    }, [filters]);
 
 
     const handleSelectChange = (type, value) => {
@@ -157,131 +169,74 @@ const ScheduleClasses = () => {
     }
 
 
-
     return (
         <div className='w-[100%] px-[2.5%] py-[1.5%] ' >
-            <h1 className='text-xl text-[var(--white-8)] font-extrabold' >Schedule Your Classes</h1>
-            <span className='flex items-center gap-1 text-xs text-[var(--white-6)] ' ><User size="14" />Total classes: 122</span>
-            <form onSubmit={scheduleClassesHandler} >
-                <h3 className=' mt-12 font-semibold text-[var(--white-7)]' >Select detailes</h3>
+            {user.role === "teacher" && (<><h1 className='text-xl text-[var(--white-8)] font-extrabold' >Schedule Your Classes</h1>
+                <span className='flex items-center gap-1 text-xs text-[var(--white-6)] ' ><User size="14" />Total classes: 122</span>
+                <form className='mb-8 ' onSubmit={scheduleClassesHandler} >
+                    <h3 className=' mt-12 font-semibold text-[var(--white-7)]' >Select detailes</h3>
 
-                {/* Schedule class details panel */}
-                <div className='w-fit ' >
-                    <div className="filter-container rounded-sm w-full flex items-center gap-3 ">
-                        <Select value={filters.day} onValueChange={(e) => handleSelectChange("day", e)} >
-                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[120px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                <SelectValue className="h-5" placeholder="Day" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-300">
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Monday">Monday</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Tuesday">Tuesday</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Wednesday">Wednesday</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Thrursday">Thrursday</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Friday">Friday</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Saturday">Saturday</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <Select value={filters.department} onValueChange={(e) => handleSelectChange("department", e)} >
-                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                <SelectValue className="h-5" placeholder="Dept" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-300">
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="CST">CST</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="CFS">CFS</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="EE">EE</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="iIDd">ID</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="MTR">MTR</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <Select value={filters.subject} onValueChange={(e) => handleSelectChange("subject", e)} >
-                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                <SelectValue className="h-5" placeholder="Subject" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-300">
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Java">Java</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="software engin">Software Engin</SelectItem>
-                                {/* <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="3rd">3rd</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="4th">4th</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="5th">5th</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="6th">6th</SelectItem> */}
-                            </SelectContent>
-                        </Select>
-                        <Select value={filters.semester} onValueChange={(e) => handleSelectChange("semester", e)} >
-                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                <SelectValue className="h-5" placeholder="Sem" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-300">
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="1st">1st</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="2nd">2nd</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="3rd">3rd</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="4th">4th</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="5th">5th</SelectItem>
-                                <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="6th">6th</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        {/* <Select value={filters.role} onValueChange={(e) => handleSelectChange("startTime", e)} >
-                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[90px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                <SelectValue className="h-5" placeholder="Start" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-300 max-h-60 overflow-y-auto">
-                                {Array.from({ length: 8 }, (_, hourIndex) => {
-                                    const hour = 10 + hourIndex;
-                                    return Array.from({ length: 6 }, (_, minIndex) => {
-                                        const minute = minIndex * 10;
-                                        if (hour === 17 && minute > 0) return null; // Only include 17:00, not 17:10 or more
-                                        const timeValue = `${hour}:${minute.toString().padStart(2, '0')}`;
-                                        return (
-                                            <SelectItem
-                                                key={timeValue}
-                                                className="cursor-pointer hover:bg-[var(--white-2)] text-[var(--white-6)]"
-                                                value={timeValue}
-                                            >
-                                                {timeValue}
-                                            </SelectItem>
-                                        );
-                                    });
-                                })}
-                            </SelectContent>
-                        </Select>
-
-                        <span className='text-[var(--white-7)] text-sm ' >To</span>
-
-                        <Select value={data.role} onValueChange={(e) => handleSelectChange("endTime", e)}>
-                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[90px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                <SelectValue className="h-5" placeholder="End" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-300 max-h-60 overflow-y-auto">
-                                {Array.from({ length: 8 }, (_, hourIndex) => {
-                                    const hour = 10 + hourIndex;
-                                    return Array.from({ length: 6 }, (_, minIndex) => {
-                                        const minute = minIndex * 10;
-                                        if (hour === 17 && minute > 0) return null; // Only include 17:00, not 17:10 or more
-                                        const timeValue = `${hour}:${minute.toString().padStart(2, '0')}`;
-                                        return (
-                                            <SelectItem
-                                                key={timeValue}
-                                                className="cursor-pointer hover:bg-[var(--white-2)] text-[var(--white-6)]"
-                                                value={timeValue}
-                                            >
-                                                {timeValue}
-                                            </SelectItem>
-                                        );
-                                    });
-                                })}
-                            </SelectContent>
-                        </Select> */}
-                        <RefreshCcw onClick={refreshFilterData} size="26" className='cursor-pointer text-[var(--white-7)] p-1.5 rounded-full hover:bg-[var(--white-4)] ' />
-                        {/* <Search size="26" className='cursor-pointer text-[var(--white-8)] p-1 rounded-full hover:bg-[var(--white-4)] ' /> */}
+                    {/* Schedule class details panel */}
+                    <div className='w-fit ' >
+                        <div className="filter-container rounded-sm w-full flex items-center gap-3 ">
+                            <Select value={filters.day} onValueChange={(e) => handleSelectChange("day", e)} >
+                                <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[120px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                    <SelectValue className="h-5" placeholder="Day" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[var(--white-1)] text-stone-300">
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Monday">Monday</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Tuesday">Tuesday</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Wednesday">Wednesday</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Thrursday">Thrursday</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Friday">Friday</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Saturday">Saturday</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={filters.department} onValueChange={(e) => handleSelectChange("department", e)} >
+                                <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                    <SelectValue className="h-5" placeholder="Dept" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[var(--white-1)] text-stone-300">
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="CST">CST</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="CFS">CFS</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="EE">EE</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="iIDd">ID</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="MTR">MTR</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={filters.subject} onValueChange={(e) => handleSelectChange("subject", e)} >
+                                <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                    <SelectValue className="h-5" placeholder="Subject" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[var(--white-1)] text-stone-300">
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Java">Java</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="software engin">Software Engin</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={filters.semester} onValueChange={(e) => handleSelectChange("semester", e)} >
+                                <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                    <SelectValue className="h-5" placeholder="Sem" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[var(--white-1)] text-stone-300">
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="1st">1st</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="2nd">2nd</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="3rd">3rd</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="4th">4th</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="5th">5th</SelectItem>
+                                    <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="6th">6th</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <RefreshCcw onClick={refreshFilterData} size="26" className='cursor-pointer text-[var(--white-7)] p-1.5 rounded-full hover:bg-[var(--white-4)] ' />
+                        </div>
+                        <div className="filter-container rounded-sm w-full flex items-center gap-3 mt-2">
+                        </div>
                     </div>
-                    <div className="filter-container rounded-sm w-full flex items-center gap-3 mt-2">
-                    </div>
-                </div>
 
 
-                <Button type="submit" className="mt-6 cursor-pointer active:scale-95 bg-emerald-600 hover:bg-emerald-400" >Schedule class</Button>
-            </form>
+                    <Button type="submit" className="mt-6 cursor-pointer active:scale-95 bg-emerald-600 hover:bg-emerald-400" >Schedule class</Button>
+                </form></>) }
 
-            <div className='mt-8 ' >
+            <div >
                 <h1 className='text-lg font-bold mb-4' >Scheduled Classes</h1>
                 {allSchedules.map((e) => (
                     <div

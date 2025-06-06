@@ -1,3 +1,4 @@
+// src/features/auth/userSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
@@ -15,18 +16,20 @@ export const userSlice = createSlice({
 	name: "user",
 	initialState,
 	reducers: {
-		setUser: (state, action) => {
+		loginSuccess: (state, action) => {
 			state.user = action.payload.name;
 			state.email = action.payload.email;
 			state.regNo = action.payload.regNo;
-			state.role = action.payload.role || "user"; // Default to 'user' if role is not provided
+			state.role = action.payload.role || "user";
 			state.accessToken = action.payload.accessToken;
 			state.isAuthenticated = true;
 			state.loading = false;
 			state.error = null;
 		},
-		clearUser: (state) => {
-			console.log("Clearing user state");
+		refreshAccessToken: (state, action) => {
+			state.accessToken = action.payload; // just update token
+		},
+		logout: (state) => {
 			state.user = null;
 			state.email = null;
 			state.regNo = null;
@@ -46,5 +49,12 @@ export const userSlice = createSlice({
 	},
 });
 
-export const { setUser, clearUser, setLoading, setError } = userSlice.actions;
+export const {
+	loginSuccess,
+	refreshAccessToken,
+	logout,
+	setLoading,
+	setError,
+} = userSlice.actions;
+
 export default userSlice.reducer;

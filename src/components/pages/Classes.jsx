@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Coffee, Ellipsis, User } from 'lucide-react';
-import { getCurrentDay, getCurrentTimeInMinutes } from '@/utils/timeUtils';
+import { getCurrentDay, getCurrentTimeInMinutes } from '../../Utils/timeUtils.js';
 
 const Classes = () => {
     const [activeClasses, setActiveClasses] = useState([]);
@@ -75,7 +75,7 @@ const Classes = () => {
         const ampm = hours >= 12 ? "PM" : "AM";
         return `${h}:${mins.toString().padStart(2, "0")} ${ampm}`;
     };
-    
+
     const currentTime = getCurrentTimeInMinutes();
 
     const renderCard = (e, type) => {
@@ -91,8 +91,8 @@ const Classes = () => {
                             <h2 className="text-[var(--white-8)] text-lg flex items-center gap-1.5 font-extrabold">
                                 {e.subject.subject}
                                 <Coffee size="15" />
-                                    <span className="bg-emerald-300 text-xs ml-3 px-3 rounded-2xl py-0.5">{e.subject.department}</span>
-                                    <span className="bg-teal-200 text-xs px-3 rounded-2xl py-0.5">{e.subject.semester}</span>
+                                <span className="bg-emerald-300 text-xs ml-3 px-3 rounded-2xl py-0.5">{e.subject.department}</span>
+                                <span className="bg-teal-200 text-xs px-3 rounded-2xl py-0.5">{e.subject.semester}</span>
                             </h2>
                             <span className="bg-[var(--white-4)] px-3 rounded-2xl text-[var(--white-7)]">
                                 {e.subject.code}
@@ -100,19 +100,19 @@ const Classes = () => {
                         </div>
                         <h3 className="text-md text-[var(--white-8)]">Teacher: {e.subject.teacher}</h3>
                         <div className="text-xs mb-1">
-                            
+
 
                             {type === "active" ? (
                                 <p className="w-fit px-2 py-0.5 bg-orange-200 rounded-sm text-[var(--black)]">
                                     Ends at <b>{endTimeFormatted}</b> — <b>{duration} min left</b>
                                 </p>
                             ) : (
-                                    <p className="w-fit px-2 py-0.5 bg-emerald-300 rounded-sm text-[var(--black)]">
+                                <p className="w-fit px-2 py-0.5 bg-emerald-300 rounded-sm text-[var(--black)]">
                                     Starts at <b>{startTimeFormatted}</b>
                                 </p>
                             )}
                         </div>
-                        
+
                     </div>
                     <Ellipsis className="cursor-pointer text-[var(--white-9)]" />
                 </div>

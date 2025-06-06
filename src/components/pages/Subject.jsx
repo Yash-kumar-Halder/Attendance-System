@@ -33,6 +33,7 @@ import {
 
 const Subject = () => {
     const dispatch = useAppDispatch();
+    const user = useAppSelector((state) => state.user);
     const reduxSubjects = useAppSelector((state) => state.subject.subjects || []);
 
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -120,7 +121,7 @@ const Subject = () => {
             [field]: value,
         }));
     };
-    
+
 
     const handleSelectChange = (type, value) => {
         setData((prev) => ({
@@ -205,7 +206,7 @@ const Subject = () => {
             toast.error("Failed to schedule subject");
         }
     };
-    
+
 
     const timeOptions = Array.from({ length: 8 }, (_, hourIndex) => {
         const hour = 10 + hourIndex;
@@ -227,114 +228,114 @@ const Subject = () => {
 
     return (
         <div className="w-[100%] px-[2.5%] py-[1.5%]">
-            <h1 className="text-xl text-[var(--white-8)] font-extrabold">Schedule Your Classes</h1>
-            <span className="flex items-center gap-1 text-xs text-[var(--white-6)]">
-                <User size="14" />
-                Total classes: 122
-            </span>
+            {user.role === "teacher" && (<><h1 className="text-xl text-[var(--white-8)] font-extrabold">Schedule Your Classes</h1>
+                <span className="flex items-center gap-1 text-xs text-[var(--white-6)]">
+                    <User size="14" />
+                    Total classes: 122
+                </span>
 
-            <form onSubmit={subjectHandler}>
-                <h3 className="mt-12 font-semibold text-[var(--white-7)]">Select detailes</h3>
-                <div className="w-fit">
-                    <div className="filter-container rounded-sm w-full flex items-center gap-3">
-                        <div className="mb-4 w-full">
-                            <label
-                                className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
-                                htmlFor="subject"
-                            >
-                                Subject name
-                            </label>
-                            <input
-                                name="subject"
-                                onChange={handleChange}
-                                value={data.subject}
-                                type="text"
-                                id="subject"
-                                className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
-                                placeholder="Enter subject name"
-                                required
-                            />
-                        </div>
-                        <div className="mb-4 w-full">
-                            <label
-                                className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
-                                htmlFor="code"
-                            >
-                                Subject code
-                            </label>
-                            <input
-                                name="code"
-                                onChange={handleChange}
-                                value={data.code}
-                                type="text"
-                                id="code"
-                                className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
-                                placeholder="Enter subject code"
-                                required
-                            />
-                        </div>
-                        <div className="mb-4 w-full">
-                            <label
-                                className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
-                                htmlFor="teacher"
-                            >
-                                Teacher
-                            </label>
-                            <input
-                                name="teacher"
-                                onChange={handleChange}
-                                value={data.teacher}
-                                type="text"
-                                id="teacher"
-                                className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
-                                placeholder="Enter teacher's name"
-                                required
-                            />
-                        </div>
+                <form onSubmit={subjectHandler} className='mb-8'>
+                    <h3 className="mt-12 font-semibold text-[var(--white-7)]">Select detailes</h3>
+                    <div className="w-fit">
+                        <div className="filter-container rounded-sm w-full flex items-center gap-3">
+                            <div className="mb-4 w-full">
+                                <label
+                                    className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
+                                    htmlFor="subject"
+                                >
+                                    Subject name
+                                </label>
+                                <input
+                                    name="subject"
+                                    onChange={handleChange}
+                                    value={data.subject}
+                                    type="text"
+                                    id="subject"
+                                    className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
+                                    placeholder="Enter subject name"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4 w-full">
+                                <label
+                                    className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
+                                    htmlFor="code"
+                                >
+                                    Subject code
+                                </label>
+                                <input
+                                    name="code"
+                                    onChange={handleChange}
+                                    value={data.code}
+                                    type="text"
+                                    id="code"
+                                    className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
+                                    placeholder="Enter subject code"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4 w-full">
+                                <label
+                                    className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
+                                    htmlFor="teacher"
+                                >
+                                    Teacher
+                                </label>
+                                <input
+                                    name="teacher"
+                                    onChange={handleChange}
+                                    value={data.teacher}
+                                    type="text"
+                                    id="teacher"
+                                    className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
+                                    placeholder="Enter teacher's name"
+                                    required
+                                />
+                            </div>
 
-                        <Select
-                            value={data.department}
-                            onValueChange={(e) => handleSelectChange("department", e)}
-                        >
-                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[300px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                <SelectValue className="h-5" placeholder="Dept" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-300">
-                                <SelectItem value="CST">CST</SelectItem>
-                                <SelectItem value="CFS">CFS</SelectItem>
-                                <SelectItem value="EE">EE</SelectItem>
-                                <SelectItem value="ID">ID</SelectItem>
-                                <SelectItem value="MTR">MTR</SelectItem>
-                            </SelectContent>
-                        </Select>
+                            <Select
+                                value={data.department}
+                                onValueChange={(e) => handleSelectChange("department", e)}
+                            >
+                                <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[300px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                    <SelectValue className="h-5" placeholder="Dept" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[var(--white-1)] text-stone-300">
+                                    <SelectItem value="CST">CST</SelectItem>
+                                    <SelectItem value="CFS">CFS</SelectItem>
+                                    <SelectItem value="EE">EE</SelectItem>
+                                    <SelectItem value="ID">ID</SelectItem>
+                                    <SelectItem value="MTR">MTR</SelectItem>
+                                </SelectContent>
+                            </Select>
 
-                        <Select
-                            value={data.semester}
-                            onValueChange={(e) => handleSelectChange("semester", e)}
-                        >
-                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[250px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                <SelectValue className="h-5" placeholder="Sem" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-300">
-                                <SelectItem value="1st">1st</SelectItem>
-                                <SelectItem value="2nd">2nd</SelectItem>
-                                <SelectItem value="3rd">3rd</SelectItem>
-                                <SelectItem value="4th">4th</SelectItem>
-                                <SelectItem value="5th">5th</SelectItem>
-                                <SelectItem value="6th">6th</SelectItem>
-                            </SelectContent>
-                        </Select>
+                            <Select
+                                value={data.semester}
+                                onValueChange={(e) => handleSelectChange("semester", e)}
+                            >
+                                <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[250px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                    <SelectValue className="h-5" placeholder="Sem" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[var(--white-1)] text-stone-300">
+                                    <SelectItem value="1st">1st</SelectItem>
+                                    <SelectItem value="2nd">2nd</SelectItem>
+                                    <SelectItem value="3rd">3rd</SelectItem>
+                                    <SelectItem value="4th">4th</SelectItem>
+                                    <SelectItem value="5th">5th</SelectItem>
+                                    <SelectItem value="6th">6th</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                </div>
-                <Button
-                    type="submit"
-                    className="mt-6 cursor-pointer active:scale-95 bg-emerald-600 hover:bg-emerald-400"
-                >
-                    Add class
-                </Button>
-            </form>
+                    <Button
+                        type="submit"
+                        className="mt-6 cursor-pointer active:scale-95 bg-emerald-600 hover:bg-emerald-400"
+                    >
+                        Add class
+                    </Button>
+                </form></>)}
 
-            <div className="mt-8">
+            <div>
                 <h1 className="text-lg font-bold mb-4">All Classes</h1>
                 <div className="flex flex-col gap-4">
                     <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
@@ -409,7 +410,7 @@ const Subject = () => {
                                             </SelectContent>
                                         </Select>
 
-                                        
+
 
                                         {/* <Select
                                             value={scheduleData.end}
@@ -445,8 +446,8 @@ const Subject = () => {
                             <AlertDialogFooter>
                                 <AlertDialogCancel onClick={() => {
                                     setOpenScheduleDialog(false)
-                                }} 
-                                className="cursor-pointer"
+                                }}
+                                    className="cursor-pointer"
                                 >Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                     className="bg-red-600 cursor-pointer hover:bg-red-700"
