@@ -11,6 +11,7 @@ import LandingPage from './components/pages/LandingPage'
 import Leaderboard from './components/pages/Leaderboard'
 import ScheduleClasses from './components/pages/ScheduleClasses'
 import Subject from './components/pages/Subject'
+import AllStudents from './components/pages/AllStudents'
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
             <Route path='dashboard' element={<Dashboard />} ></Route>
             <Route path='leaderboard' element={<Leaderboard />} ></Route>
             <Route path='classes' element={<Classes />} ></Route>
+            <Route path='all-students' element={<AllStudents />} ></Route>
             <Route path='schedule-classes' element={<ScheduleClasses />} ></Route>
             <Route path='add-subject' element={<Subject />} ></Route>
           </Route>
