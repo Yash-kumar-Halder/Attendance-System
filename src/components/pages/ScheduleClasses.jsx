@@ -45,40 +45,41 @@ const ScheduleClasses = () => {
     };
 
     const fetchScheduleSubjects = async () => {
-        try {
-            const token = await getValidToken();
-            let response;
+    try {
+        const token = await getValidToken();
+        let response;
 
-            if (user.role === "student") {
-                response = await axios.post(
-                    "http://localhost:8000/api/v1/shedule/student/get",
-                    { user },
-                    {
-                        headers: { Authorization: `Bearer ${token}` },
-                        withCredentials: true,
-                    }
-                );
-            } else {
-                response = await axios.post(
-                    "http://localhost:8000/api/v1/shedule/get",
-                    {},
-                    {
-                        headers: { Authorization: `Bearer ${token}` },
-                        withCredentials: true,
-                    }
-                );
-            }
-
-            if (response.data.success) {
-                const filtered = filterSchedule(response.data.scheduleClasses, filters);
-                const sorted = sortScheduleByCurrentDay(filtered);
-                setAllSchedules(sorted);
-            }
-        } catch (error) {
-            console.error("Failed to fetch subjects", error);
-            toast.error("Failed to fetch subjects");
+        if (user.role === "student") {
+            response = await axios.post(
+                "http://localhost:8000/api/v1/shedule/student/get",
+                {}, // No need to send user
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                }
+            );
+        } else {
+            response = await axios.post(
+                "http://localhost:8000/api/v1/shedule/get",
+                {},
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                }
+            );
         }
-    };
+
+        if (response.data.success) {
+            const filtered = filterSchedule(response.data.scheduleClasses, filters);
+            const sorted = sortScheduleByCurrentDay(filtered);
+            setAllSchedules(sorted);
+        }
+    } catch (error) {
+        console.error("Failed to fetch subjects", error);
+        toast.error("Failed to fetch subjects");
+    }
+};
+
 
     useEffect(() => {
         if (user?.role) {

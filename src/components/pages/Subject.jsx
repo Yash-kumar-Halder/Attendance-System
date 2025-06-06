@@ -89,10 +89,18 @@ const Subject = () => {
     const fetchSubjects = async () => {
         try {
             const token = await getValidToken();
-            const response = await axios.get("http://localhost:8000/api/v1/subject/get", {
-                headers: { Authorization: `Bearer ${token}` },
-                withCredentials: true,
-            });
+            let response;
+            if(user.role === "student") {
+                response = await axios.get("http://localhost:8000/api/v1/subject/student/get", {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                });
+            }else {
+                response = await axios.get("http://localhost:8000/api/v1/subject/get", {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                });
+            }
 
             if (response.data.success) {
                 dispatch(setSubjects(response.data.subjects));
