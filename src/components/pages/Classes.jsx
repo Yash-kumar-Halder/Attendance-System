@@ -45,7 +45,7 @@ const Classes = () => {
     const fetchScheduleData = async () => {
         try {
             const token = await getValidToken();
-            const res = await await axios.post("http://localhost:8000/api/v1/shedule/get", {}, {
+            const res = await axios.post("http://localhost:8000/api/v1/shedule/get", {}, {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
             });
