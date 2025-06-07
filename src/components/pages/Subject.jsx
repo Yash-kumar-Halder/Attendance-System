@@ -30,6 +30,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
+import SubjectCard from '../Skeleton/SubjectCard';
 
 const Subject = () => {
     const dispatch = useAppDispatch();
@@ -40,6 +41,7 @@ const Subject = () => {
     const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
     const [deleteItem, setDeleteItem] = useState("");
     const [scheduleItem, setScheduleItem] = useState("");
+    const [isSkeleton, setIsSkeleton] = useState(true)
     const [data, setData] = useState({
         subject: "",
         code: "",
@@ -88,14 +90,15 @@ const Subject = () => {
     // Fetch subjects
     const fetchSubjects = async () => {
         try {
+            setIsSkeleton(true);
             const token = await getValidToken();
             let response;
-            if(user.role === "student") {
+            if (user.role === "student") {
                 response = await axios.get("http://localhost:8000/api/v1/subject/student/get", {
                     headers: { Authorization: `Bearer ${token}` },
                     withCredentials: true,
                 });
-            }else {
+            } else {
                 response = await axios.get("http://localhost:8000/api/v1/subject/get", {
                     headers: { Authorization: `Bearer ${token}` },
                     withCredentials: true,
@@ -104,10 +107,12 @@ const Subject = () => {
 
             if (response.data.success) {
                 dispatch(setSubjects(response.data.subjects));
+                setIsSkeleton(false);
             }
         } catch (error) {
             console.error("Failed to fetch subjects", error);
             toast.error("Failed to fetch subjects");
+            setIsSkeleton(false);
         }
     };
 
@@ -523,6 +528,17 @@ const Subject = () => {
                             </div>
                         </div>
                     ))}
+
+                    {isSkeleton && (
+                        <>
+                            <SubjectCard />
+                            <SubjectCard />
+                            <SubjectCard />
+                            <SubjectCard />
+                            <SubjectCard />
+                        </>
+                    )}
+
                 </div>
             </div>
         </div>

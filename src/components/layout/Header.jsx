@@ -101,7 +101,7 @@ const Header = () => {
                                     toast.success("Logout successfully");
                                 }
                                 }
-                                className='border border-blue-600 text-blue-700 px-3 py-0.5 rounded-2xl text-sm hover:bg-blue-400 hover:text-blue-900 transition-transform active:scale-90 '
+                                className='border border-blue-600 text-blue-700 px-3 py-0.5 rounded-2xl text-sm hover:bg-blue-400 hover:text-blue-900 transition-transform active:scale-90 cursor-pointer'
                             >
                                 Logout
                             </button>
@@ -113,13 +113,13 @@ const Header = () => {
                         <>
                             <Link
                                 to="/signup"
-                                className='border border-blue-600 text-blue-700 px-3 py-0.5 rounded-2xl text-sm hover:bg-blue-400 hover:text-white transition-transform active:scale-90 '
+                                className='border border-blue-600 text-blue-700 px-3 py-0.5 rounded-2xl text-sm hover:bg-blue-400 hover:text-white transition-transform active:scale-90 cursor-pointer'
                             >
                                 Signup
                             </Link>
                             <Link
                                 to="/login"
-                                className='border border-gray-400 text-[var(--white-8)] px-3 py-0.5 rounded-2xl text-sm hover:bg-[var(--white-9)] hover:text-[var(--white-1)] transition-transform active:scale-90 '
+                                className='border border-gray-400 text-[var(--white-8)] px-3 py-0.5 rounded-2xl text-sm hover:bg-[var(--white-9)] hover:text-[var(--white-1)] transition-transform active:scale-90 cursor-pointer'
                             >
                                 Login
                             </Link>
@@ -149,36 +149,6 @@ const Header = () => {
 
                     )
                 }
-
-                {/* <Link
-                    to="/dashboard"
-                    className='flex items-center gap-1 hover:text-amber-600 transition-all duration-300 ease-in-out'
-                <Link
-                    to="/login"
-                    className='flex items-center gap-1 hover:text-amber-600 transition-all duration-300 ease-in-out'
-                >Login</Link>
-                <Link
-                    to="/login"
-                    className='flex items-center gap-1 hover:text-amber-600 transition-all duration-300 ease-in-out'
-                >Signup</Link>
-
-                <Link
-                    to="/login"
-                    className='flex items-center gap-1 hover:text-amber-600 transition-all duration-300 ease-in-out'
-                ></Link>
-                <Link
-                    to="/login"
-                    className='flex items-center gap-1 hover:text-amber-600 transition-all duration-300 ease-in-out'
-                ></Link>
-                    
-
-                {/* {isDarkMode ? <CloudMoon
-                    className='cursor-pointer text-white'
-                    onClick={() => toggleTheme(isDarkMode, setIsDarkMode)}
-                /> : <CloudSun
-                    className='cursor-pointer text-white'
-                    onClick={() => toggleTheme(isDarkMode, setIsDarkMode)}
-                />} */}
             </div>
 
         </div>

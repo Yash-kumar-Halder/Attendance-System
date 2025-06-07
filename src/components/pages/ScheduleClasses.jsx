@@ -5,11 +5,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from 'sonner'
 import axios from 'axios'
 import { useAppSelector } from "../../hooks/index.js"
+import ScheduleCard from '../Skeleton/ScheduleCard'
 
 const ScheduleClasses = () => {
 
     const user = useAppSelector((state) => state.user);
     const [allSchedules, setAllSchedules] = useState([]);
+    const [isSkeleton, setIsSetskeleton] = useState(false)
+
     const [filters, setFilters] = useState({
         day: "",
         subject: "",
@@ -45,40 +48,42 @@ const ScheduleClasses = () => {
     };
 
     const fetchScheduleSubjects = async () => {
-    try {
-        const token = await getValidToken();
-        let response;
+        try {
+            setIsSetskeleton(true);
+            const token = await getValidToken();
+            let response;
 
-        if (user.role === "student") {
-            response = await axios.post(
-                "http://localhost:8000/api/v1/shedule/student/get",
-                {}, // No need to send user
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true,
-                }
-            );
-        } else {
-            response = await axios.post(
-                "http://localhost:8000/api/v1/shedule/get",
-                {},
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true,
-                }
-            );
-        }
+            if (user.role === "student") {
+                response = await axios.post(
+                    "http://localhost:8000/api/v1/shedule/student/get",
+                    {}, // No need to send user
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                        withCredentials: true,
+                    }
+                );
+            } else {
+                response = await axios.post(
+                    "http://localhost:8000/api/v1/shedule/get",
+                    {},
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                        withCredentials: true,
+                    }
+                );
+            }
 
-        if (response.data.success) {
-            const filtered = filterSchedule(response.data.scheduleClasses, filters);
-            const sorted = sortScheduleByCurrentDay(filtered);
-            setAllSchedules(sorted);
+            if (response.data.success) {
+                const filtered = filterSchedule(response.data.scheduleClasses, filters);
+                const sorted = sortScheduleByCurrentDay(filtered);
+                setAllSchedules(sorted);
+                setIsSetskeleton(false);
+            }
+        } catch (error) {
+            console.error("Failed to fetch subjects", error);
+            toast.error("Failed to fetch subjects");
         }
-    } catch (error) {
-        console.error("Failed to fetch subjects", error);
-        toast.error("Failed to fetch subjects");
-    }
-};
+    };
 
 
     useEffect(() => {
@@ -232,17 +237,15 @@ const ScheduleClasses = () => {
                         <div className="filter-container rounded-sm w-full flex items-center gap-3 mt-2">
                         </div>
                     </div>
-
-
                     <Button type="submit" className="mt-6 cursor-pointer active:scale-95 bg-emerald-600 hover:bg-emerald-400" >Schedule class</Button>
-                </form></>) }
+                </form></>)}
 
             <div >
                 <h1 className='text-lg font-bold mb-4' >Scheduled Classes</h1>
                 {allSchedules.map((e) => (
                     <div
                         key={e._id}
-                        className="w-full h-24 px-5 py-2 rounded-md bg-[var(--card)] mb-3"
+                        className="w-full h-24 px-5 py-2 rounded-md bg-[var(--card)] mb-3 fade-in-65"
                     >
                         <div className="flex justify-between items-start">
                             <div className="w-full">
@@ -273,39 +276,18 @@ const ScheduleClasses = () => {
                                     </span>
                                 </div>
                             </div>
-
-                            {/* <DropdownMenu>
-                                <DropdownMenuTrigger>
-                                    <Ellipsis className="cursor-pointer text-[var(--white-9)]" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuLabel>Options</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        onClick={() => {
-                                            setScheduleItem(e._id);
-                                            setOpenScheduleDialog(true);
-                                        }}
-                                        className="text-teal-500 hover:bg-teal-100 cursor-pointer"
-                                    >
-                                        Schedule
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>Billing</DropdownMenuItem>
-                                    <DropdownMenuItem>Team</DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        className="text-red-500 cursor-pointer hover:bg-red-200"
-                                        onClick={() => {
-                                            setDeleteItem(e._id);
-                                            setOpenDeleteDialog(true);
-                                        }}
-                                    >
-                                        Delete
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu> */}
                         </div>
                     </div>
                 ))}
+                {isSkeleton && (
+                    <>
+                        <ScheduleCard />
+                        <ScheduleCard />
+                        <ScheduleCard />
+                        <ScheduleCard />
+                        <ScheduleCard />
+                    </>
+                )}
 
             </div>
         </div>
