@@ -4,7 +4,7 @@ import Layout from './components/layout/Layout'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Login from './components/pages/Login'
 import Signup from './components/pages/Signup'
-import Classes from './components/pages/Classes'
+import Classes from './components/pages/ActiveClasses'
 import Dashboard from './components/pages/Dashboard'
 import "./Styles/Root.css"
 import LandingPage from './components/pages/LandingPage'

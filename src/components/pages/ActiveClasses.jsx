@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Coffee, Ellipsis, NotebookPen, User } from 'lucide-react';
 import { getCurrentDay, getCurrentTimeInMinutes } from '../../Utils/timeUtils.js';
 import ActiveClassesCard from '../Skeleton/ActiveClassesCard.jsx';
+import { Button } from '../ui/button.jsx';
+import { toast } from 'sonner';
 
 const Classes = () => {
     const [activeClasses, setActiveClasses] = useState([]);
@@ -81,9 +83,37 @@ const Classes = () => {
         return `${h}:${mins.toString().padStart(2, "0")} ${ampm}`;
     };
 
+    const markAttendance = async (e) => {
+        try {
+            const token = await getValidToken();
+            const response = await axios.post(
+                "http://localhost:8000/api/v1/attendance/mark",
+                {
+                    subjectId: e.subject._id,
+                    scheduleSlot: e._id,
+                },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                }
+            );
+            toast.success(response.data.message);
+        } catch (error) {
+            if (error.response && error.response.data && error.response.data.message) {
+                toast.error(error.response.data.message); // Shows toast for duplicate or other errors
+            } else {
+                toast.error("Something went wrong");
+            }
+            console.error("Error marking attendance", error);
+        }
+    };
+    
+
     const currentTime = getCurrentTimeInMinutes();
 
     const renderCard = (e, type) => {
+        if (!e || !e.subject) return null; // ✅ Fix: Prevents null error
+
         const endTimeFormatted = formatMinutesToTime(e.endTime);
         const startTimeFormatted = formatMinutesToTime(e.startTime);
         const duration = e.endTime - currentTime;
@@ -91,39 +121,43 @@ const Classes = () => {
         return (
             <div key={e._id} className="w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)]">
                 <div className="flex justify-between items-start">
-                    <div className="w-full">
+                    <div className="w-full ">
                         <div className="flex items-center justify-between pr-5 w-full">
                             <h2 className="text-[var(--white-8)] text-lg flex items-center gap-1.5 font-extrabold">
                                 {e.subject.subject}
                                 <NotebookPen size="15" />
-                                <span className="bg-emerald-300 text-xs ml-3 px-3 rounded-2xl py-0.5">{e.subject.department}</span>
-                                <span className="bg-teal-200 text-xs px-3 rounded-2xl py-0.5">{e.subject.semester}</span>
+                                <span className="bg-emerald-300 text-stone-800 text-xs ml-3 px-3 rounded-2xl py-0.5">
+                                    {e.subject.department}
+                                </span>
+                                <span className="bg-teal-200 text-stone-800 text-xs px-3 rounded-2xl py-0.5">
+                                    {e.subject.semester}
+                                </span>
                             </h2>
                             <span className="bg-[var(--white-4)] px-3 rounded-2xl text-[var(--white-7)]">
                                 {e.subject.code}
                             </span>
                         </div>
-                        <h3 className="text-md text-[var(--white-8)]">Teacher: {e.subject.teacher}</h3>
-                        <div className="text-xs mb-1">
-
-
-                            {type === "active" ? (
-                                <p className="w-fit px-2 py-0.5 bg-orange-200 rounded-sm text-[var(--black)]">
-                                    Ends at <b>{endTimeFormatted}</b> — <b>{duration} min left</b>
-                                </p>
-                            ) : (
-                                <p className="w-fit px-2 py-0.5 bg-emerald-300 rounded-sm text-[var(--black)]">
-                                    Starts at <b>{startTimeFormatted}</b>
-                                </p>
-                            )}
+                        <div className='flex justify-between items-center pr-5' >
+                            <div><h3 className="text-md text-[var(--white-8)]">Teacher: {e.subject.teacher}</h3>
+                                <div className="text-xs mb-1">
+                                    {type === "active" ? (
+                                        <p className="w-fit px-2 py-0.5 bg-orange-200 rounded-sm text-[var(--black)]">
+                                            Ends at <b>{endTimeFormatted}</b> — <b>{duration} min left</b>
+                                        </p>
+                                    ) : (
+                                        <p className="w-fit px-2 py-0.5 bg-emerald-300 rounded-sm text-[var(--black)]">
+                                            Starts at <b>{startTimeFormatted}</b>
+                                        </p>
+                                    )}
+                                </div></div>
+                            <button onClick={() => markAttendance(e)} className="text-xs py-1.5 text-white px-3 rounded-md bg-green-600 hover:bg-green-800 cursor-pointer " >Attendance</button>
                         </div>
-
                     </div>
-                    {/* <Ellipsis className="cursor-pointer text-[var(--white-9)]" /> */}
                 </div>
             </div>
         );
     };
+    
 
 
     return (
@@ -143,7 +177,7 @@ const Classes = () => {
             {activeClasses.length > 0 ? (
                 activeClasses.map(e => renderCard(e, "active"))
             ) : (
-                    !isSkeleton &&<p className="text-stone-400 text-sm mt-2">No active classes right now.</p>
+                !isSkeleton && <p className="text-stone-400 text-sm mt-2">No active classes right now.</p>
             )}
 
             <h2 className='text-teal-400 text-xl font-bold mt-8 mb-3'>Upcoming Classes</h2>
