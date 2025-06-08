@@ -12,6 +12,7 @@ import Leaderboard from './components/pages/Leaderboard'
 import ScheduleClasses from './components/pages/ScheduleClasses'
 import Subject from './components/pages/Subject'
 import AllStudents from './components/pages/AllStudents'
+import ClassHistory from './components/pages/ClassHistory'
 
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
             <Route path='all-students' element={<AllStudents />} ></Route>
             <Route path='schedule-classes' element={<ScheduleClasses />} ></Route>
             <Route path='add-subject' element={<Subject />} ></Route>
+            <Route path='class-history' element={<ClassHistory />} ></Route>
           </Route>
         </Routes>
       </BrowserRouter>

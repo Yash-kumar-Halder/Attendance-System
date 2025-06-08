@@ -9,17 +9,15 @@ import {
     SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import {
-    ArrowDown01,
     CalendarCheck2,
     Flame,
     LayoutDashboard,
     NotebookTabs,
     Radiation,
-    Sun,
-    Users,
-    Settings,
     ChartColumnBig,
-    GraduationCap
+    GraduationCap,
+    History,
+    Shapes
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../hooks/index.js";
 import { NavLink } from "react-router-dom";
@@ -32,7 +30,8 @@ export function AppSidebar() {
         { name: "Dashboard", icon: <LayoutDashboard size={18} />, link: "/dashboard" },
         { name: "LeaderBoard", icon: <ChartColumnBig size={18} />, link: "/leaderboard" },
         { name: "Active Classes", icon: <Radiation size={18} />, link: "/classes" },
-        { name: "Shedule Classes", icon: <CalendarCheck2 size={18} />, link: "/schedule-classes" },
+        { name: "Upcomming Classes", icon: <CalendarCheck2 size={18} />, link: "/schedule-classes" },
+        { name: "Hisory", icon: <History size={18} />, link: "/class-history" },
         { name: "Subjects", icon: <NotebookTabs size={18} />, link: "/add-subject" },
         { name: "Students", icon: <GraduationCap size={18} />, link: "/all-students" },
     ];
@@ -42,7 +41,7 @@ export function AppSidebar() {
         { name: "Active Classes", icon: <Radiation size={18} />, link: "/classes" },
         { name: "Shedule Classes", icon: <CalendarCheck2 size={18} />, link: "/schedule-classes" },
         { name: "Subjects", icon: <NotebookTabs size={18} />, link: "/add-subject" },
-        { name: "Settings", icon: <Settings size={18} />, link: "/user/settings" },
+        { name: "Hisory", icon: <History size={18} />, link: "/class-history" },
     ];
 
     const sidebarItems = user.role === "teacher" ? teacherMenu : studentMenu;
@@ -53,8 +52,8 @@ export function AppSidebar() {
                 <SidebarContent>
                     <SidebarMenu className='h-10 flex justify-center'>
                         <SidebarMenuButton className='hover:bg-transparent content-center py-0 flex items-center'>
-                            <a href="#" className="flex h-6 gap-2.5 items-center text-[#ef50f5]">
-                                <Flame className="stroke-[2]" size={20} />
+                            <a href="#" className="flex h-6 gap-2 items-center text-[#ef50f5]">
+                                <Shapes className="stroke-[3]" size={20} />
                                 <h2 className="text-headline font-medium bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent tracking-wider text-nowrap uppercase">
                                     {user.user}
                                 </h2>
