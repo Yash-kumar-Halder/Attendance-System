@@ -275,7 +275,6 @@ const Subject = () => {
 
             if (res.data.success) {
                 toast.success("Schedule deleted");
-                // fetchSubjectSchedule(scheduleData.subject);
                 fetchSubjectSchedule(subjectId)
             } else {
                 toast.error("Failed to delete schedule");
@@ -285,9 +284,7 @@ const Subject = () => {
             toast.error("Something went wrong");
         }
     };
-    
-    
-    
+
 
     const timeOptions = Array.from({ length: 8 }, (_, hourIndex) => {
         const hour = 10 + hourIndex;
@@ -309,112 +306,116 @@ const Subject = () => {
 
     return (
         <div className="w-[100%] px-[2.5%] py-[1.5%]">
-            {user.role === "teacher" && (<><h1 className="text-xl text-[var(--white-8)] font-extrabold">Schedule Your Classes</h1>
-                <span className="flex items-center gap-1 text-xs text-[var(--white-6)]">
-                    <User size="14" />
-                    Total classes: 122
-                </span>
+            {user.role === "teacher" && (
+                <>
+                    <h1 className="text-xl text-[var(--white-8)] font-extrabold">Schedule Your Classes</h1>
+                    <span className="flex items-center gap-1 text-xs text-[var(--white-6)]">
+                        <User size="14" />
+                        Total classes: 122
+                    </span>
 
-                <form onSubmit={subjectHandler} className='mb-8'>
-                    <h3 className="mt-12 font-semibold text-[var(--white-7)]">Select detailes</h3>
-                    <div className="w-fit">
-                        <div className="filter-container rounded-sm w-full flex items-center gap-3">
-                            <div className="mb-4 w-full">
-                                <label
-                                    className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
-                                    htmlFor="subject"
-                                >
-                                    Subject name
-                                </label>
-                                <input
-                                    name="subject"
-                                    onChange={handleChange}
-                                    value={data.subject}
-                                    type="text"
-                                    id="subject"
-                                    className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
-                                    placeholder="Enter subject name"
-                                    required
-                                />
-                            </div>
-                            <div className="mb-4 w-full">
-                                <label
-                                    className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
-                                    htmlFor="code"
-                                >
-                                    Subject code
-                                </label>
-                                <input
-                                    name="code"
-                                    onChange={handleChange}
-                                    value={data.code}
-                                    type="text"
-                                    id="code"
-                                    className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
-                                    placeholder="Enter subject code"
-                                    required
-                                />
-                            </div>
-                            <div className="mb-4 w-full">
-                                <label
-                                    className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
-                                    htmlFor="teacher"
-                                >
-                                    Teacher
-                                </label>
-                                <input
-                                    name="teacher"
-                                    onChange={handleChange}
-                                    value={data.teacher}
-                                    type="text"
-                                    id="teacher"
-                                    className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
-                                    placeholder="Enter teacher's name"
-                                    required
-                                />
-                            </div>
+                    <form onSubmit={subjectHandler} className='mb-8'>
+                        <h3 className="mt-12 font-semibold text-[var(--white-7)]">Select detailes</h3>
+                        <div className="w-fit">
+                            <div className="filter-container rounded-sm w-full flex items-center gap-3">
+                                <div className="mb-4 w-full">
+                                    <label
+                                        className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
+                                        htmlFor="subject"
+                                    >
+                                        Subject name
+                                    </label>
+                                    <input
+                                        name="subject"
+                                        onChange={handleChange}
+                                        value={data.subject}
+                                        type="text"
+                                        id="subject"
+                                        className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
+                                        placeholder="Enter subject name"
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-4 w-full">
+                                    <label
+                                        className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
+                                        htmlFor="code"
+                                    >
+                                        Subject code
+                                    </label>
+                                    <input
+                                        name="code"
+                                        onChange={handleChange}
+                                        value={data.code}
+                                        type="text"
+                                        id="code"
+                                        className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
+                                        placeholder="Enter subject code"
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-4 w-full">
+                                    <label
+                                        className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
+                                        htmlFor="teacher"
+                                    >
+                                        Teacher
+                                    </label>
+                                    <input
+                                        name="teacher"
+                                        onChange={handleChange}
+                                        value={data.teacher}
+                                        type="text"
+                                        id="teacher"
+                                        className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
+                                        placeholder="Enter teacher's name"
+                                        required
+                                    />
+                                </div>
 
-                            <Select
-                                value={data.department}
-                                onValueChange={(e) => handleSelectChange("department", e)}
-                            >
-                                <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[300px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                    <SelectValue className="h-5" placeholder="Dept" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-[var(--white-1)] text-stone-500">
-                                    <SelectItem value="CST">CST</SelectItem>
-                                    <SelectItem value="CFS">CFS</SelectItem>
-                                    <SelectItem value="EE">EE</SelectItem>
-                                    <SelectItem value="ID">ID</SelectItem>
-                                    <SelectItem value="MTR">MTR</SelectItem>
-                                </SelectContent>
-                            </Select>
+                                <Select
+                                    value={data.department}
+                                    onValueChange={(e) => handleSelectChange("department", e)}
+                                >
+                                    <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[300px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                        <SelectValue className="h-5" placeholder="Dept" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-[var(--white-1)] text-stone-500">
+                                        <SelectItem value="CST">CST</SelectItem>
+                                        <SelectItem value="CFS">CFS</SelectItem>
+                                        <SelectItem value="EE">EE</SelectItem>
+                                        <SelectItem value="ID">ID</SelectItem>
+                                        <SelectItem value="MTR">MTR</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                            <Select
-                                value={data.semester}
-                                onValueChange={(e) => handleSelectChange("semester", e)}
-                            >
-                                <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[250px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                    <SelectValue className="h-5" placeholder="Sem" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-[var(--white-1)] text-stone-500">
-                                    <SelectItem value="1st">1st</SelectItem>
-                                    <SelectItem value="2nd">2nd</SelectItem>
-                                    <SelectItem value="3rd">3rd</SelectItem>
-                                    <SelectItem value="4th">4th</SelectItem>
-                                    <SelectItem value="5th">5th</SelectItem>
-                                    <SelectItem value="6th">6th</SelectItem>
-                                </SelectContent>
-                            </Select>
+                                <Select
+                                    value={data.semester}
+                                    onValueChange={(e) => handleSelectChange("semester", e)}
+                                >
+                                    <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[250px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
+                                        <SelectValue className="h-5" placeholder="Sem" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-[var(--white-1)] text-stone-500">
+                                        <SelectItem value="1st">1st</SelectItem>
+                                        <SelectItem value="2nd">2nd</SelectItem>
+                                        <SelectItem value="3rd">3rd</SelectItem>
+                                        <SelectItem value="4th">4th</SelectItem>
+                                        <SelectItem value="5th">5th</SelectItem>
+                                        <SelectItem value="6th">6th</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-                    </div>
-                    <Button
-                        type="submit"
-                        className="mt-6 cursor-pointer active:scale-95 bg-emerald-600 hover:bg-emerald-400"
-                    >
-                        Add class
-                    </Button>
-                </form></>)}
+                        <Button
+                            type="submit"
+                            className="mt-6 cursor-pointer active:scale-95 bg-emerald-600 hover:bg-emerald-400"
+                        >
+                            Add class
+                        </Button>
+                    </form>
+                </>
+            )}
 
             <div>
                 <h1 className="text-2xl text-yellow-500 font-bold mb-4">Classes</h1>
@@ -492,9 +493,9 @@ const Subject = () => {
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Schedule your class</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    This action can be changeble. <br /> you can change it later after schedule.
+                                    This action can be changeable. <br /> you can change it later after schedule.
                                 </AlertDialogDescription>
-                                <div className='flex  gap-5 items-center mb-6 ' >
+                                <div className='flex gap-5 items-center mb-6' >
                                     <Select value={scheduleData.day}
                                         onValueChange={(e) => handleScheduleSelectChange("day", e)}>
                                         <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[120px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
@@ -573,7 +574,7 @@ const Subject = () => {
                             <AlertDialogHeader>
                                 <AlertDialogTitle>All Schedules</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    It show all schedule base on week.
+                                    It shows all schedules based on the week.
                                 </AlertDialogDescription>
                                 {subjectSchedules?.map((e, idx) => (
                                     <div key={idx} className="flex gap-2 items-center">
@@ -581,11 +582,13 @@ const Subject = () => {
                                         <div className="text-sm bg-amber-100 px-2 py-0.5 rounded-md">{e.startTime}</div>
                                         <div className="text-sm bg-amber-100 px-2 py-0.5 rounded-md">{e.endTime}</div>
                                         <div className="text-sm bg-amber-100 px-2 py-0.5 rounded-md">{e.duration}</div>
-                                        <Trash2
-                                            className="text-red-500 cursor-pointer hover:bg-red-100 rounded-full p-1"
-                                            size={24}
-                                            onClick={() => handleDeleteSchedule(e.scheduleId, e.subject._id)}
-                                        />
+                                        {user.role !== "student" && ( // Conditionally render Trash2 icon for non-students
+                                            <Trash2
+                                                className="text-red-500 cursor-pointer hover:bg-red-100 rounded-full p-1"
+                                                size={24}
+                                                onClick={() => handleDeleteSchedule(e.scheduleId, e.subject._id)}
+                                            />
+                                        )}
                                     </div>
                                 ))}
 
@@ -624,47 +627,47 @@ const Subject = () => {
                                         <span className="bg-teal-200 px-3 rounded-2xl py-0.5">{e.semester}</span>
                                     </div>
                                 </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger>
-                                        <Ellipsis className="cursor-pointer text-[var(--white-9)]" />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            onClick={() => {
-                                                setScheduleItem(e._id);
-                                                setOpenScheduleDialog(true);
-                                            }}
-                                            className="text-teal-500 hover:bg-teal-100 cursor-pointer">Set Schedule</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-green-500 hover:bg-green-100 cursor-pointer" onClick={() => {
-                                            fetchSubjectSchedule(e._id); setOpenSubjectScheduleDialog(true)
-                                        }} >View Schedule</DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            className="text-red-500 cursor-pointer hover:bg-red-200"
-                                            onClick={() => {
-                                                setDeleteItem(e._id);
-                                                setOpenDeleteDialog(true);
-                                            }}
-                                        >
-                                            Delete
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                {user.role !== "student" && ( // Conditionally render the Ellipsis icon
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger>
+                                            <Ellipsis className="cursor-pointer text-[var(--white-9)]" />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                                onClick={() => {
+                                                    setScheduleItem(e._id);
+                                                    setOpenScheduleDialog(true);
+                                                }}
+                                                className="cursor-pointer"
+                                            >
+                                                Set Schedule
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={() => {
+                                                    setOpenSubjectScheduleDialog(true);
+                                                    fetchSubjectSchedule(e._id);
+                                                }}
+                                                className="cursor-pointer"
+                                            >
+                                                View Schedule
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={() => {
+                                                    setDeleteItem(e._id);
+                                                    setOpenDeleteDialog(true);
+                                                }}
+                                                className="text-red-500 cursor-pointer"
+                                            >
+                                                Delete Subject
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
                             </div>
                         </div>
                     ))}
-
-                    {isSkeleton && (
-                        <>
-                            <SubjectCard />
-                            <SubjectCard />
-                            <SubjectCard />
-                            <SubjectCard />
-                            <SubjectCard />
-                        </>
-                    )}
-
                 </div>
             </div>
         </div>

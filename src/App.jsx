@@ -9,7 +9,7 @@ import Dashboard from './components/pages/Dashboard'
 import "./Styles/Root.css"
 import LandingPage from './components/pages/LandingPage'
 import Leaderboard from './components/pages/Leaderboard'
-import ScheduleClasses from './components/pages/ScheduleClasses'
+import ScheduleClasses from './components/pages/UpcomingClasses'
 import Subject from './components/pages/Subject'
 import AllStudents from './components/pages/AllStudents'
 import ClassHistory from './components/pages/ClassHistory'

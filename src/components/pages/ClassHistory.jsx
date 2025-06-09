@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getValidToken } from '@/Utils/getValidToken';
 import axios from 'axios';
-import { NotebookPen, RefreshCcw } from 'lucide-react';
+import { NotebookPen, RefreshCcw, Eye } from 'lucide-react'; // Import Eye icon
 import { fetchSubjects } from '@/Utils/FetchSubjects';
 import { useAppSelector } from '@/hooks';
 import {
@@ -11,6 +11,16 @@ import {
     SelectTrigger,
     SelectValue
 } from '../ui/select';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+} from '@/components/ui/alert-dialog'; // Import AlertDialog components
+import { toast } from 'sonner';
 
 const ClassHistory = () => {
     const user = useAppSelector((state) => state.user);
@@ -19,6 +29,12 @@ const ClassHistory = () => {
     const [filters, setFilters] = useState({
         subject: "", dept: "", sem: "", day: "", type: ""
     });
+
+    // New states for attendance details
+    const [attendanceDetailDialog, setAttendanceDetailDialog] = useState(false);
+    const [presentStudents, setPresentStudents] = useState([]);
+    const [currentClassForAttendance, setCurrentClassForAttendance] = useState(null);
+
 
     const fetchClassHistory = async () => {
         try {
@@ -39,6 +55,31 @@ const ClassHistory = () => {
         }
     };
 
+    // New function to fetch students present in a specific class
+    const fetchStudentsPresent = async (scheduleSlotId, date) => {
+        try {
+            const token = await getValidToken();
+            const response = await axios.get(
+                `http://localhost:8000/api/v1/attendance/present-students?scheduleSlotId=${scheduleSlotId}&date=${date}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                }
+            );
+            if (response.data.success) {
+                setPresentStudents(response.data.data);
+                setAttendanceDetailDialog(true); // Open the dialog on successful fetch
+            } else {
+                toast.error(response.data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching students present:', error);
+            const message = error.response?.data?.message || 'Failed to fetch attendance details.';
+            toast.error(message);
+        }
+    };
+
+
     const fetchSubjectsData = async () => {
         const data = await fetchSubjects(user);
         setSubjects(data);
@@ -50,13 +91,17 @@ const ClassHistory = () => {
     }, []);
 
     const filteredClasses = pastClasses.filter((cls) => {
-        if (user.role !== "teacher") return true;
-        const { subject, dept, sem, day, type } = filters;
-        return (!subject || cls.subject === subject) &&
-            (!dept || cls.department.toLowerCase() === dept.toLowerCase()) &&
-            (!sem || cls.semester === sem) &&
-            (!day || cls.day.toLowerCase() === day.toLowerCase()) &&
-            (!type || (type === "Cancelled" ? cls.isCancelled : !cls.isCancelled));
+        // Apply teacher-specific filters only if the user is a teacher
+        // Students should see all their relevant history without these filters
+        if (user.role === "teacher") {
+            const { subject, dept, sem, day, type } = filters;
+            return (!subject || cls.subject === subject) &&
+                (!dept || cls.department.toLowerCase() === dept.toLowerCase()) &&
+                (!sem || cls.semester === sem) &&
+                (!day || cls.day.toLowerCase() === day.toLowerCase()) &&
+                (!type || (type === "Cancelled" ? cls.isCancelled : !cls.isCancelled));
+        }
+        return true; // Students see all classes relevant to them
     });
 
     const renderCard = (e, idx) => (
@@ -100,8 +145,14 @@ const ClassHistory = () => {
                         </div>
 
                         {user.role === "teacher" ? (
-                            <button className="text-xs py-1.5 text-white px-3 rounded-md bg-green-600 hover:bg-green-800 cursor-pointer">
-                                {e.isCancelled ? "Cancelled" : "Attend"}
+                            <button
+                                onClick={() => {
+                                    setCurrentClassForAttendance(e); // Store current class data
+                                    fetchStudentsPresent(e.scheduleSlotId, e.date);
+                                }}
+                                className="text-xs py-1.5 text-white px-3 rounded-md bg-blue-600 hover:bg-blue-700 cursor-pointer flex items-center gap-1"
+                            >
+                                <Eye size={12} /> View Details
                             </button>
                         ) : (
                             <span className={`text-xs font-bold px-3 py-1 rounded-md ${e.isCancelled
@@ -126,17 +177,17 @@ const ClassHistory = () => {
 
             {user.role === "teacher" && (
                 <div className="filter-container rounded-sm w-full flex items-center gap-3">
-                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, day: value }))}>
+                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, day: value }))} value={filters.day}>
                         <SelectTrigger className="w-[120px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Day" />
                         </SelectTrigger>
                         <SelectContent className="bg-[var(--white-1)] text-stone-400">
-                            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(day => (
+                            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => (
                                 <SelectItem key={day} value={day.toLowerCase()}>{day}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, dept: value }))}>
+                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, dept: value }))} value={filters.dept}>
                         <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Dept" />
                         </SelectTrigger>
@@ -146,17 +197,17 @@ const ClassHistory = () => {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, sem: value }))}>
+                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, sem: value }))} value={filters.sem}>
                         <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Sem" />
                         </SelectTrigger>
                         <SelectContent className="bg-[var(--white-1)] text-stone-400">
-                            {["1st", "2nd", "3rd", "4th", "5th", "6th"].map(sem => (
+                            {["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"].map(sem => (
                                 <SelectItem key={sem} value={sem}>{sem}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, subject: value }))}>
+                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, subject: value }))} value={filters.subject}>
                         <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Subject" />
                         </SelectTrigger>
@@ -168,7 +219,7 @@ const ClassHistory = () => {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
+                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))} value={filters.type}>
                         <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Type" />
                         </SelectTrigger>
@@ -186,7 +237,45 @@ const ClassHistory = () => {
             )}
 
             <div className='mt-10'>
-                {filteredClasses.map((e, idx) => renderCard(e, idx))}
+                {filteredClasses.length > 0 ? (
+                    filteredClasses.map((e, idx) => renderCard(e, idx))
+                ) : (
+                    <p className="text-[var(--white-6)] text-sm">No class history found matching your criteria.</p>
+                )}
+
+                {/* Attendance Details Dialog */}
+                <AlertDialog open={attendanceDetailDialog} onOpenChange={setAttendanceDetailDialog}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Students Present in Class</AlertDialogTitle>
+                            {currentClassForAttendance && (
+                                <AlertDialogDescription>
+                                    <p>Subject: <b>{currentClassForAttendance.subject}</b></p>
+                                    <p>Date: <b>{currentClassForAttendance.date}</b></p>
+                                    <p>Time: <b>{Math.floor(currentClassForAttendance.startTime / 60)}:{(currentClassForAttendance.startTime % 60).toString().padStart(2, '0')} - {Math.floor(currentClassForAttendance.endTime / 60)}:{(currentClassForAttendance.endTime % 60).toString().padStart(2, '0')}</b></p>
+                                </AlertDialogDescription>
+                            )}
+                        </AlertDialogHeader>
+                        <div className="max-h-[300px] overflow-y-auto">
+                            {presentStudents.length > 0 ? (
+                                <ul className="list-disc pl-5">
+                                    {presentStudents.map((student, index) => (
+                                        <li key={index} className="text-gray-700">
+                                            {student.fullName} ({student.email})
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-gray-600">No students were marked present for this class.</p>
+                            )}
+                        </div>
+                        <AlertDialogFooter>
+                            <AlertDialogAction onClick={() => setAttendanceDetailDialog(false)}>
+                                Close
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </div>
     );

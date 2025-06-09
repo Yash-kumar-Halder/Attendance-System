@@ -5,43 +5,30 @@ import { getCurrentDay, getCurrentTimeInMinutes } from '../../Utils/timeUtils.js
 import ActiveClassesCard from '../Skeleton/ActiveClassesCard.jsx';
 import { Button } from '../ui/button.jsx';
 import { toast } from 'sonner';
-import CircularLoader from '../MyComponents/CircularLoader.jsx';
+import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Import the new component
 import { useAppSelector } from '@/hooks/index.js';
 
-// Import Shadcn Dialog components
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter,
-} from "../ui/dialog.jsx"; // Adjust path as per your project structure
-
 const Classes = () => {
+
+    // Get the user object from the Redux store
     const user = useAppSelector(state => state.user);
-    const isStudent = user?.role === "student";
+    const isStudent = user?.role === "student"; // A boolean flag for easy checking
 
     const [activeClasses, setActiveClasses] = useState([]);
     const [upcomingClasses, setUpcomingClasses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [markedAttendances, setMarkedAttendances] = useState({});
-    const [cancelledClasses, setCancelledClasses] = useState({});
-
-    // State for the Shadcn Dialog
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [dialogStudents, setDialogStudents] = useState([]);
-    const [dialogClassInfo, setDialogClassInfo] = useState(null);
-    const [isFetchingStudents, setIsFetchingStudents] = useState(false);
+    const [markedAttendances, setMarkedAttendances] = useState({}); // To store attendance status for active classes
+    const [cancelledClasses, setCancelledClasses] = useState({}); // To store cancelled classes for today
 
     useEffect(() => {
+        // Only fetch attendance and cancelled classes if the user is a student
         if (isStudent) {
             fetchScheduleAndAttendanceData();
         } else {
+            // If not a student, just fetch schedules, no need for attendance/cancellation checks
             fetchSchedulesOnly();
         }
-    }, [isStudent]);
+    }, [isStudent]); // Re-run effect if isStudent changes (though typically it won't after initial load)
 
     const getValidToken = async () => {
         let token = localStorage.getItem("accessToken");
@@ -70,6 +57,7 @@ const Classes = () => {
         }
     };
 
+    // New function to fetch only schedules (for teachers or other roles)
     const fetchSchedulesOnly = async () => {
         try {
             setIsLoading(true);
@@ -100,11 +88,13 @@ const Classes = () => {
         }
     };
 
+
     const fetchScheduleAndAttendanceData = async () => {
         try {
             setIsLoading(true);
             const token = await getValidToken();
 
+            // Fetch schedules
             const scheduleRes = await axios.post("http://localhost:8000/api/v1/schedule/get", {}, {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
@@ -122,6 +112,7 @@ const Classes = () => {
                 setActiveClasses(active);
                 setUpcomingClasses(upcoming);
 
+                // Fetch attendance status for active classes (ONLY if isStudent)
                 if (isStudent) {
                     const attendanceChecks = active.map(async (cls) => {
                         try {
@@ -135,7 +126,7 @@ const Classes = () => {
                             return { scheduleSlotId: cls._id, isMarked: attendanceStatusRes.data.isMarked };
                         } catch (error) {
                             console.error(`Error checking attendance for ${cls._id}:`, error);
-                            return { scheduleSlotId: cls._id, isMarked: false };
+                            return { scheduleSlotId: cls._id, isMarked: false }; // Default to false on error
                         }
                     });
                     const results = await Promise.all(attendanceChecks);
@@ -146,8 +137,9 @@ const Classes = () => {
                     setMarkedAttendances(markedMap);
                 }
 
+                // Fetch cancelled classes for today (Can be for both, but we'll conditionally show for student)
                 const cancelledClassesRes = await axios.get(
-                    "http://localhost:8000/api/v1/cancelled-classes/today",
+                    "http://localhost:8000/api/v1/classes/cancelled-classes/today",
                     {
                         headers: { Authorization: `Bearer ${token}` },
                         withCredentials: true,
@@ -180,6 +172,7 @@ const Classes = () => {
     };
 
     const markAttendance = async (e) => {
+        // Ensure only students can mark attendance
         if (!isStudent) {
             toast.error("Only students can mark attendance.");
             return;
@@ -199,6 +192,7 @@ const Classes = () => {
                 }
             );
             toast.success(response.data.message);
+            // Update the attendance status locally after successful marking
             setMarkedAttendances(prev => ({ ...prev, [e._id]: true }));
         } catch (error) {
             if (error.response && error.response.data && error.response.data.message) {
@@ -213,37 +207,6 @@ const Classes = () => {
         }
     };
 
-    // New function to fetch students present in a class
-    const fetchPresentStudents = async (scheduleSlotId, subjectName, startTime, endTime) => {
-        setIsFetchingStudents(true);
-        setDialogClassInfo({ subjectName, startTime, endTime });
-        try {
-            const token = await getValidToken();
-            const today = new Date();
-            const todayDateString = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD for the backend query
-
-            const response = await axios.get(
-                `http://localhost:8000/api/v1/attendance/present-students?scheduleSlotId=${scheduleSlotId}&date=${todayDateString}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true,
-                }
-            );
-
-            if (response.data.success) {
-                setDialogStudents(response.data.data);
-                setIsDialogOpen(true); // Open the dialog after fetching data
-            } else {
-                toast.error(response.data.message || "Failed to fetch student list.");
-            }
-        } catch (error) {
-            console.error("Error fetching present students:", error);
-            toast.error("Failed to fetch student list.");
-        } finally {
-            setIsFetchingStudents(false);
-        }
-    };
-
     const currentTime = getCurrentTimeInMinutes();
 
     const renderCard = (e, type) => {
@@ -254,7 +217,7 @@ const Classes = () => {
         const duration = e.endTime - currentTime;
 
         const isAttendanceMarked = markedAttendances[e._id];
-        const isClassCancelled = cancelledClasses[e._id];
+        const isClassCancelled = cancelledClasses[e._id]; // Check if this class slot is cancelled
 
         return (
             <div key={e._id} className="w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)]">
@@ -290,7 +253,8 @@ const Classes = () => {
                                     )}
                                 </div>
                             </div>
-                            {isStudent && type === "active" ? (
+                            {/* Conditional rendering based on user role */}
+                            {isStudent && type === "active" ? ( // Only show attendance/status for students in active classes
                                 isClassCancelled ? (
                                     <span className="text-xs py-1.5 text-white px-3 rounded-md bg-red-600">Cancelled</span>
                                 ) : isAttendanceMarked ? (
@@ -304,18 +268,11 @@ const Classes = () => {
                                     </button>
                                 )
                             ) : (
+                                // For teachers or non-active classes, you can show a different button or nothing
+                                // For teachers, you might display 'View Roster' or nothing here.
+                                // For now, we'll just show 'More Info' for teachers if they are in active classes.
                                 type === "active" && user?.role === "teacher" && (
-                                    <Button
-                                        onClick={() => fetchPresentStudents(e._id, e.subject.subject, startTimeFormatted, endTimeFormatted)}
-                                        className="text-xs py-1.5 px-3 bg-gray-600 hover:bg-gray-700 cursor-pointer"
-                                        disabled={isFetchingStudents}
-                                    >
-                                        {isFetchingStudents && dialogClassInfo?.subjectName === e.subject.subject ? (
-                                            <CircularLoader size="14" />
-                                        ) : (
-                                            "View Details"
-                                        )}
-                                    </Button>
+                                    <span className="text-xs py-1.5 text-white px-3 rounded-md bg-gray-600">View Details</span>
                                 )
                             )}
                         </div>
@@ -351,37 +308,6 @@ const Classes = () => {
                     )}
                 </>
             )}
-
-            {/* Shadcn Dialog for displaying present students */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Students Present in {dialogClassInfo?.subjectName}</DialogTitle>
-                        <DialogDescription>
-                            Class Time: {dialogClassInfo?.startTime} - {dialogClassInfo?.endTime}
-                        </DialogDescription>
-                    </DialogHeader>
-                    {isFetchingStudents ? (
-                        <div className="flex justify-center items-center h-24">
-                            <CircularLoader />
-                            <p className="ml-2 text-gray-500">Fetching student list...</p>
-                        </div>
-                    ) : dialogStudents.length > 0 ? (
-                        <ul className="list-disc pl-5 max-h-60 overflow-y-auto">
-                            {dialogStudents.map(student => (
-                                <li key={student._id} className="mb-1 text-gray-800">
-                                    <span className="font-semibold">{student.fullName}</span> ({student.email})
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p className="text-gray-600 italic">No students marked present for this class yet today.</p>
-                    )}
-                    <DialogFooter>
-                        <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 };
