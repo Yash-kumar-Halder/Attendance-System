@@ -30,6 +30,9 @@ import {
     DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { toast } from 'sonner';
+import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Assuming this path is correct
+// If using CSS Modules, uncomment the line below:
+// import styles from './UpcomingClasses.module.css';
 
 const UpcomingClasses = () => {
     const user = useAppSelector((state) => state.user);
@@ -38,9 +41,12 @@ const UpcomingClasses = () => {
     const [cancelItem, setCancelItem] = useState(null);
     const [subjects, setSubjects] = useState([]);
     const [filters, setFilters] = useState({ subject: '', dept: '', sem: '', day: '' });
+    const [isLoading, setIsLoading] = useState(true);
+    const [visibleCardCount, setVisibleCardCount] = useState(0); // New state for staggered rendering
 
     const fetchUpcomingClasses = async () => {
         try {
+            setIsLoading(true);
             const token = await getValidToken();
             const response = await axios.get('http://localhost:8000/api/v1/classes/upcoming', {
                 headers: { Authorization: `Bearer ${token}` },
@@ -48,20 +54,32 @@ const UpcomingClasses = () => {
             });
             if (response.data.success) {
                 setUpcomingClasses(response.data.upcomingClasses);
+                setVisibleCardCount(0); // Reset for new data load
             }
         } catch (error) {
             console.error('Error fetching upcoming classes', error);
+            toast.error("Failed to fetch upcoming classes.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const fetchSubjectsData = async () => {
-        const data = await fetchSubjects(user);
-        setSubjects(data);
+        try {
+            const data = await fetchSubjects(user);
+            setSubjects(data);
+        } catch (error) {
+            console.error('Error fetching subjects', error);
+            toast.error("Failed to fetch subjects data.");
+        }
     };
 
     useEffect(() => {
-        fetchSubjectsData();
-        fetchUpcomingClasses();
+        const loadData = async () => {
+            setIsLoading(true);
+            await Promise.all([fetchSubjectsData(), fetchUpcomingClasses()]);
+        };
+        loadData();
     }, []);
 
     const filteredClasses = upcomingClasses.filter((cls) => {
@@ -74,6 +92,17 @@ const UpcomingClasses = () => {
             (!day || cls.day.toLowerCase() === day.toLowerCase())
         );
     });
+
+    // Effect for staggered rendering
+    useEffect(() => {
+        if (!isLoading && filteredClasses.length > 0 && visibleCardCount < filteredClasses.length) {
+            const timer = setTimeout(() => {
+                setVisibleCardCount((prevCount) => prevCount + 1);
+            }, 100); // Adjust delay here (e.g., 100ms per card)
+            return () => clearTimeout(timer); // Cleanup on unmount or re-render
+        }
+    }, [isLoading, filteredClasses, visibleCardCount]);
+
 
     const handleCancelSubject = async (data) => {
         try {
@@ -115,10 +144,15 @@ const UpcomingClasses = () => {
 
     const clearFilter = () => {
         setFilters({ subject: '', dept: '', sem: '', day: '' });
+        setVisibleCardCount(0); // Reset animation when filters clear
     };
 
     const renderCard = (e, idx) => (
-        <div key={idx} className="w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)]">
+        <div
+            key={idx}
+            className={`w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)] fade-in-card`}
+        // If using CSS Modules: className={`w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)] ${styles.fadeIn}`}
+        >
             <div className="flex justify-between items-start">
                 <div className="w-full">
                     <div className="flex items-center justify-between pr-5 w-full">
@@ -135,7 +169,7 @@ const UpcomingClasses = () => {
                         <div className="flex gap-2">
                             <span className="text-xs bg-amber-100 h-fit px-1.5 rounded-full">{e.day}</span>
                             <span className="text-xs bg-amber-100 h-fit px-1.5 rounded-full">{e.date}</span>
-                            <span className="bg-[var(--white-4)]  h-fit text-center content-center px-3 py-0.5 text-xs rounded-full text-[var(--white-7)]">
+                            <span className="bg-[var(--white-4)] h-fit text-center content-center px-3 py-0.5 text-xs rounded-full text-[var(--white-7)]">
                                 {e.code}
                             </span>
                             {!e.isCancelled && user.role === "teacher" && (
@@ -262,11 +296,14 @@ const UpcomingClasses = () => {
             )}
 
             <div className="mt-10">
-                {/* {console.log(filteredClasses)} */}
-                {filteredClasses.length > 0 ? (
-                    filteredClasses.map((e, idx) => renderCard(e, idx))
+                {isLoading ? (
+                    <CircularLoader />
                 ) : (
-                    <p className="text-[var(--white-6)] text-sm">No upcoming classes found</p>
+                    filteredClasses.length > 0 ? (
+                        filteredClasses.slice(0, visibleCardCount).map((e, idx) => renderCard(e, idx))
+                    ) : (
+                        <p className="text-[var(--white-6)] text-sm">No upcoming classes found</p>
+                    )
                 )}
                 <AlertDialog open={cancelledScheduleDialog} onOpenChange={setCancelledScheduleDialog}>
                     <AlertDialogContent>

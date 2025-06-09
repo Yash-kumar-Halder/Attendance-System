@@ -1,20 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Coffee, Ellipsis, RefreshCcw, Trash2, User } from 'lucide-react';
-import { Button } from '../ui/button';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '../ui/alert-dialog';
-import { toast } from 'sonner';
+import { getValidToken } from '@/Utils/getValidToken';
 import axios from 'axios';
-import { useAppSelector, useAppDispatch } from "../../hooks/index.js";
-import { setSubjects } from '@/Redux/Slices/Application/subjects';
+import { NotebookPen, RefreshCcw } from 'lucide-react';
+import { fetchSubjects } from '@/Utils/FetchSubjects';
+import { useAppSelector } from '@/hooks';
 import {
     Select,
     SelectContent,
@@ -23,206 +12,100 @@ import {
     SelectValue,
 } from '../ui/select';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
-import SubjectCard from '../Skeleton/SubjectCard';
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Assuming this path is correct
+// If using CSS Modules, uncomment the line below:
+// import styles from './UpcomingClasses.module.css';
 
-const Subject = () => {
-    const dispatch = useAppDispatch();
+const UpcomingClasses = () => {
     const user = useAppSelector((state) => state.user);
-    const reduxSubjects = useAppSelector((state) => state.subject.subjects || []);
+    const [cancelledScheduleDialog, setCancelledScheduleDialog] = useState(false);
+    const [upcomingClasses, setUpcomingClasses] = useState([]);
+    const [cancelItem, setCancelItem] = useState(null);
+    const [subjects, setSubjects] = useState([]);
+    const [filters, setFilters] = useState({ subject: '', dept: '', sem: '', day: '' });
+    const [isLoading, setIsLoading] = useState(true);
+    const [visibleCardCount, setVisibleCardCount] = useState(0); // Reintroduced for staggered rendering
 
-    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-    const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
-    const [openSubjectScheduleDialog, setOpenSubjectScheduleDialog] = useState(false);
-
-
-    const [subjectSchedules, setSubjectSchedules] = useState([]);
-    const [deleteItem, setDeleteItem] = useState("");
-    const [scheduleItem, setScheduleItem] = useState("");
-    const [isSkeleton, setIsSkeleton] = useState(true)
-    const [filters, setFilters] = useState({
-        subject: "",
-        dept: "",
-        sem: "",
-        day: "",
-        type: ""
-    });
-    const [data, setData] = useState({
-        subject: "",
-        code: "",
-        teacher: "",
-        department: "",
-        semester: "",
-    });
-    const [scheduleData, setScheduleData] = useState({
-        subject: "",
-        day: "",
-        startTime: "",
-        endTime: ""
-    });
-
-    // Utility function to get token, refresh if needed
-    const getValidToken = async () => {
-        let token = localStorage.getItem("accessToken");
+    const fetchUpcomingClasses = async () => {
         try {
-            // Try a dummy request to check token validity
-            await axios.get("http://localhost:8000/api/v1/subject/get", {
+            setIsLoading(true);
+            const token = await getValidToken();
+            const response = await axios.get('http://localhost:8000/api/v1/classes/upcoming', {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
             });
-            return token;
-        } catch (error) {
-            if (error.response?.status === 401 || error.response?.status === 403) {
-                // Refresh token
-                try {
-                    const refreshResponse = await axios.get(
-                        "http://localhost:8000/api/v1/auth/refresh-token",
-                        { withCredentials: true }
-                    );
-                    const newToken = refreshResponse.data.accessToken;
-                    localStorage.setItem("accessToken", newToken);
-                    return newToken;
-                } catch (refreshError) {
-                    // Handle refresh token failure - logout or notify user here if needed
-                    toast.error("Session expired. Please login again.");
-                    throw refreshError;
-                }
-            }
-            throw error;
-        }
-    };
-
-    // Fetch subjects
-    const fetchSubjects = async () => {
-        try {
-            setIsSkeleton(true);
-            const token = await getValidToken();
-            let response;
-            if (user.role === "student") {
-                response = await axios.get("http://localhost:8000/api/v1/subject/student/get", {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true,
-                });
-            } else {
-                response = await axios.get("http://localhost:8000/api/v1/subject/get", {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true,
-                });
-            }
-
             if (response.data.success) {
-                dispatch(setSubjects(response.data.subjects));
-                setIsSkeleton(false);
+                setUpcomingClasses(response.data.upcomingClasses);
+                setVisibleCardCount(0); // Reset for new data load to re-trigger animation
             }
         } catch (error) {
-            console.error("Failed to fetch subjects", error);
-            toast.error("Failed to fetch subjects");
-            setIsSkeleton(false);
+            console.error('Error fetching upcoming classes', error);
+            toast.error("Failed to fetch upcoming classes.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const filteredSubjects = reduxSubjects.filter((e) => {
-        if (filters.subject && e.subject !== filters.subject) return false;
-        if (filters.dept && e.department.toLowerCase() !== filters.dept) return false;
-        if (filters.sem && e.semester !== filters.sem) return false;
-        // If you implement day/type filters in future, add logic here
-        return true;
-    });
+    const fetchSubjectsData = async () => {
+        try {
+            const data = await fetchSubjects(user);
+            setSubjects(data);
+        } catch (error) {
+            console.error('Error fetching subjects', error);
+            toast.error("Failed to fetch subjects data.");
+        }
+    };
 
     useEffect(() => {
-        fetchSubjects();
+        const loadData = async () => {
+            setIsLoading(true);
+            await Promise.all([fetchSubjectsData(), fetchUpcomingClasses()]);
+            // The `isLoading` state will be set to false in fetchUpcomingClasses's finally block
+        };
+        loadData();
     }, []);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
+    const filteredClasses = upcomingClasses.filter((cls) => {
+        if (user.role !== 'teacher') return true;
+        const { subject, dept, sem, day } = filters;
+        return (
+            (!subject || cls.subject === subject) &&
+            (!dept || cls.department.toLowerCase() === dept.toLowerCase()) &&
+            (!sem || cls.semester === sem) &&
+            (!day || cls.day.toLowerCase() === day.toLowerCase())
+        );
+    });
 
-    const handleScheduleSelectChange = (field, value) => {
-        setScheduleData((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    };
-
-    const handleDeleteSubject = async (id) => {
-        try {
-            const token = await getValidToken();
-            const response = await axios.delete(
-                `http://localhost:8000/api/v1/subject/delete/${id}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true,
-                }
-            );
-
-            if (response.data.success) {
-                toast.success(response.data.message);
-                fetchSubjects();
-            }
-        } catch (error) {
-            console.error("Delete Error:", error);
-            toast.error("Failed to delete subject");
+    // Effect for staggered rendering (reintroduced)
+    useEffect(() => {
+        if (!isLoading && filteredClasses.length > 0 && visibleCardCount < filteredClasses.length) {
+            const timer = setTimeout(() => {
+                setVisibleCardCount((prevCount) => prevCount + 1);
+            }, 100); // Adjust delay here (e.g., 100ms per card)
+            return () => clearTimeout(timer); // Cleanup on unmount or re-render
         }
-    };
+    }, [isLoading, filteredClasses, visibleCardCount]);
 
-    const handleSelectChange = (type, value) => {
-        setData((prev) => ({
-            ...prev,
-            [type]: value,
-        }));
-    };
-
-    const subjectHandler = async (e) => {
-        e.preventDefault();
+    const handleCancelSubject = async (data) => {
         try {
-            const token = await getValidToken();
-            await axios.post(
-                "http://localhost:8000/api/v1/subject/set",
-                data,
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true,
-                }
-            );
-
-            toast.success("Subject added successfully!");
-            setData({
-                subject: "",
-                code: "",
-                teacher: "",
-                department: "",
-                semester: "",
-            });
-            fetchSubjects();
-        } catch (error) {
-            console.error("Add subject error", error);
-            toast.error(error?.response?.data?.message || "Something went wrong while adding subject");
-        }
-    };
-
-    const handleScheduleSubject = async (id) => {
-        try {
-            const updatedData = {
-                ...scheduleData,
-                subject: scheduleItem,
-            };
-
-            setScheduleData(updatedData); // ✅ still update the UI
-
             const token = await getValidToken();
             const response = await axios.post(
-                `http://localhost:8000/api/v1/schedule/set`,
-                updatedData, // ✅ send correct data
+                `http://localhost:8000/api/v1/classes/cancel-classes`,
+                {
+                    scheduleSlotId: data.scheduleSlotId,
+                    date: data.date,
+                    reason: "Cancelled by teacher",
+                },
                 {
                     headers: { Authorization: `Bearer ${token}` },
                     withCredentials: true,
@@ -231,447 +114,220 @@ const Subject = () => {
 
             if (response.data.success) {
                 toast.success(response.data.message);
+
+                setUpcomingClasses((prev) =>
+                    prev.map((item) => {
+                        if (
+                            item.scheduleSlotId === data.scheduleSlotId &&
+                            item.date === data.date
+                        ) {
+                            return { ...item, isCancelled: true, reason: "Cancelled by teacher" };
+                        }
+                        return item;
+                    })
+                );
             }
         } catch (error) {
-            console.error("Schedule Error:", error);
-            toast.error("Failed to schedule subject");
+            console.error("Failed to cancel the class Error:", error);
+            const message = error.response?.data?.message || "Failed to cancel the class";
+            toast.error(message);
         }
     };
 
-    const fetchSubjectSchedule = async (subjectId) => {
-        try {
-            setIsSkeleton(true);
-            const token = await getValidToken();
-            const res = await axios.post("http://localhost:8000/api/v1/schedule/subject/schedule",
-                { subjectId },
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true,
-                });
-
-            if (res.data.success) {
-                const responceSchedules = res.data.schedules;
-                setSubjectSchedules(responceSchedules);
-            }
-        } catch (error) {
-            console.error("Error fetching schedule data", error);
-        } finally {
-            setIsSkeleton(false);
-        }
-    }
-
-    const handleDeleteSchedule = async (scheduleId, subjectId) => {
-        try {
-            const token = await getValidToken();
-
-            const res = await axios.post(
-                `http://localhost:8000/api/v1/schedule/subject/delete`,
-                { scheduleId },
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true,
-                }
-            );
-
-            if (res.data.success) {
-                toast.success("Schedule deleted");
-                fetchSubjectSchedule(subjectId)
-            } else {
-                toast.error("Failed to delete schedule");
-            }
-        } catch (error) {
-            console.error("Error deleting schedule:", error);
-            toast.error("Something went wrong");
-        }
+    const clearFilter = () => {
+        setFilters({ subject: '', dept: '', sem: '', day: '' });
+        setVisibleCardCount(0); // Reset animation when filters clear
     };
 
-
-    const timeOptions = Array.from({ length: 8 }, (_, hourIndex) => {
-        const hour = 10 + hourIndex;
-        return Array.from({ length: 6 }, (_, minIndex) => {
-            const minute = minIndex * 10;
-            if (hour === 17 && minute > 0) return null; // Only allow 17:00
-            const timeValue = `${hour}:${minute.toString().padStart(2, '0')}`;
-            return (
-                <SelectItem
-                    key={`${hour}-${minute}`}
-                    className="cursor-pointer hover:bg-[var(--white-2)] text-[var(--white-6)]"
-                    value={timeValue}
-                >
-                    {timeValue}
-                </SelectItem>
-            );
-        }).filter(Boolean);
-    }).flat();
+    const renderCard = (e, idx) => (
+        <div
+            key={idx}
+            // Use the fade-in-card class for animation
+            className={`w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)] fade-in-card`}
+        // If using CSS Modules: className={`w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)] ${styles.fadeIn}`}
+        >
+            <div className="flex justify-between items-start">
+                <div className="w-full">
+                    <div className="flex items-center justify-between pr-5 w-full">
+                        <h2 className="text-[var(--white-8)] text-lg flex items-center gap-1.5 font-extrabold">
+                            {e.subject}
+                            <NotebookPen size={15} />
+                            <span className="bg-emerald-300 text-stone-800 text-xs ml-3 px-3 rounded-2xl py-0.5">
+                                {e.department}
+                            </span>
+                            <span className="bg-teal-200 text-stone-800 text-xs px-3 rounded-2xl py-0.5">
+                                {e.semester}
+                            </span>
+                        </h2>
+                        <div className="flex gap-2">
+                            <span className="text-xs bg-amber-100 h-fit px-1.5 rounded-full">{e.day}</span>
+                            <span className="text-xs bg-amber-100 h-fit px-1.5 rounded-full">{e.date}</span>
+                            <span className="bg-[var(--white-4)] h-fit text-center content-center px-3 py-0.5 text-xs rounded-full text-[var(--white-7)]">
+                                {e.code}
+                            </span>
+                            {!e.isCancelled && user.role === "teacher" && (
+                                <button
+                                    onClick={() => {
+                                        setCancelledScheduleDialog(true);
+                                        setCancelItem(e);
+                                    }}
+                                    className="text-red-500 rounded-md border border-red-500 hover:bg-red-500 hover:text-white cursor-pointer text-xs px-2 "
+                                >
+                                    Cancel Class
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex justify-between items-center pr-5">
+                        <div>
+                            <h3 className="text-md text-[var(--white-8)]">Teacher: {e.teacher}</h3>
+                            <div className="text-xs flex gap-1.5 mb-1">
+                                <p className="w-fit px-2 py-0.5 bg-orange-100 rounded-sm text-[var(--black)]">
+                                    Starts at{' '}
+                                    <b>
+                                        {Math.floor(e.startTime / 60)}:{(e.startTime % 60).toString().padStart(2, '0')}
+                                    </b>{' '}
+                                    —{' '}
+                                    <b>
+                                        {Math.floor(e.endTime / 60)}:{(e.endTime % 60).toString().padStart(2, '0')}
+                                    </b>
+                                </p>
+                                <p className="w-fit px-2 py-0.5 bg-emerald-100 rounded-sm text-[var(--black)]">
+                                    Duration{' '}
+                                    <b>
+                                        {Math.floor((e.endTime - e.startTime) / 60) > 0 &&
+                                            `${Math.floor((e.endTime - e.startTime) / 60)}h `}
+                                        {(e.endTime - e.startTime) % 60 !== 0 && `${(e.endTime - e.startTime) % 60}m`}
+                                    </b>
+                                </p>
+                            </div>
+                        </div>
+                        {e.isCancelled ? (
+                            <span className="text-xs py-1.5 px-3 rounded-md bg-red-600 text-white">Cancelled</span>
+                        ) : (
+                            <span className="text-xs py-1.5 px-3 rounded-md bg-blue-600 text-white">Upcoming</span>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="w-[100%] px-[2.5%] py-[1.5%]">
-            {user.role === "teacher" && (
-                <>
-                    <h1 className="text-xl text-[var(--white-8)] font-extrabold">Schedule Your Classes</h1>
-                    <span className="flex items-center gap-1 text-xs text-[var(--white-6)]">
-                        <User size="14" />
-                        Total classes: 122
-                    </span>
+            <h1 className="text-xl text-[var(--white-8)] font-extrabold">Upcoming Classes</h1>
+            <p className="text-[var(--white-6)] mb-6">All your upcoming scheduled classes are listed here</p>
 
-                    <form onSubmit={subjectHandler} className='mb-8'>
-                        <h3 className="mt-12 font-semibold text-[var(--white-7)]">Select detailes</h3>
-                        <div className="w-fit">
-                            <div className="filter-container rounded-sm w-full flex items-center gap-3">
-                                <div className="mb-4 w-full">
-                                    <label
-                                        className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
-                                        htmlFor="subject"
-                                    >
-                                        Subject name
-                                    </label>
-                                    <input
-                                        name="subject"
-                                        onChange={handleChange}
-                                        value={data.subject}
-                                        type="text"
-                                        id="subject"
-                                        className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
-                                        placeholder="Enter subject name"
-                                        required
-                                    />
-                                </div>
-                                <div className="mb-4 w-full">
-                                    <label
-                                        className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
-                                        htmlFor="code"
-                                    >
-                                        Subject code
-                                    </label>
-                                    <input
-                                        name="code"
-                                        onChange={handleChange}
-                                        value={data.code}
-                                        type="text"
-                                        id="code"
-                                        className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
-                                        placeholder="Enter subject code"
-                                        required
-                                    />
-                                </div>
-                                <div className="mb-4 w-full">
-                                    <label
-                                        className="w-full text-sm font-medium text-[var(--white-7)] mb-2"
-                                        htmlFor="teacher"
-                                    >
-                                        Teacher
-                                    </label>
-                                    <input
-                                        name="teacher"
-                                        onChange={handleChange}
-                                        value={data.teacher}
-                                        type="text"
-                                        id="teacher"
-                                        className="w-full bg-[var(--white-2)] px-3 py-2 border border-[var(--white-5)] rounded focus:outline-none focus:ring focus:ring-none focus:border-[var(--white-4)] placeholder:text-[var(--white-6)] text-[var(--white-8)] active:bg-[var(--white-1)]"
-                                        placeholder="Enter teacher's name"
-                                        required
-                                    />
-                                </div>
-
-                                <Select
-                                    value={data.department}
-                                    onValueChange={(e) => handleSelectChange("department", e)}
-                                >
-                                    <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[300px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                        <SelectValue className="h-5" placeholder="Dept" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-[var(--white-1)] text-stone-500">
-                                        <SelectItem value="CST">CST</SelectItem>
-                                        <SelectItem value="CFS">CFS</SelectItem>
-                                        <SelectItem value="EE">EE</SelectItem>
-                                        <SelectItem value="ID">ID</SelectItem>
-                                        <SelectItem value="MTR">MTR</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
-                                <Select
-                                    value={data.semester}
-                                    onValueChange={(e) => handleSelectChange("semester", e)}
-                                >
-                                    <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[250px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                        <SelectValue className="h-5" placeholder="Sem" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-[var(--white-1)] text-stone-500">
-                                        <SelectItem value="1st">1st</SelectItem>
-                                        <SelectItem value="2nd">2nd</SelectItem>
-                                        <SelectItem value="3rd">3rd</SelectItem>
-                                        <SelectItem value="4th">4th</SelectItem>
-                                        <SelectItem value="5th">5th</SelectItem>
-                                        <SelectItem value="6th">6th</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <Button
-                            type="submit"
-                            className="mt-6 cursor-pointer active:scale-95 bg-emerald-600 hover:bg-emerald-400"
-                        >
-                            Add class
-                        </Button>
-                    </form>
-                </>
+            {user.role === 'teacher' && (
+                <div className="filter-container rounded-sm w-full flex items-center gap-3">
+                    <Select
+                        value={filters.day}
+                        onValueChange={(value) => setFilters((prev) => ({ ...prev, day: value }))}
+                    >
+                        <SelectTrigger className="w-[120px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
+                            <SelectValue placeholder="Day" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[var(--white-1)] text-stone-400">
+                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day) => (
+                                <SelectItem key={day} value={day.toLowerCase()}>
+                                    {day}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Select
+                        value={filters.dept}
+                        onValueChange={(value) => setFilters((prev) => ({ ...prev, dept: value }))}
+                    >
+                        <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
+                            <SelectValue placeholder="Dept" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[var(--white-1)] text-stone-400">
+                            {['CST', 'CFS', 'EE', 'ID', 'MTR'].map((dept) => (
+                                <SelectItem key={dept} value={dept.toLowerCase()}>
+                                    {dept}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Select
+                        value={filters.sem}
+                        onValueChange={(value) => setFilters((prev) => ({ ...prev, sem: value }))}
+                    >
+                        <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
+                            <SelectValue placeholder="Sem" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[var(--white-1)] text-stone-400">
+                            {['1st', '2nd', '3rd', '4th', '5th', '6th'].map((sem) => (
+                                <SelectItem key={sem} value={sem}>
+                                    {sem}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Select
+                        value={filters.subject}
+                        onValueChange={(value) => setFilters((prev) => ({ ...prev, subject: value }))}
+                    >
+                        <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
+                            <SelectValue placeholder="Subject" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[var(--white-1)] text-stone-400">
+                            {subjects.map((subject) => (
+                                <SelectItem key={subject._id} value={subject.subject}>
+                                    {subject.subject}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <RefreshCcw
+                        size="26"
+                        className="cursor-pointer text-[var(--white-7)] p-1.5 rounded-full hover:bg-[var(--white-4)]"
+                        onClick={clearFilter}
+                    />
+                </div>
             )}
 
-            <div>
-                <h1 className="text-2xl text-yellow-500 font-bold mb-4">Classes</h1>
-                {user.role === "teacher" && (
-                    <div className="filter-container rounded-sm w-full flex items-center gap-3 mb-4">
-
-                        <Select value={filters.dept} onValueChange={(value) => setFilters(prev => ({ ...prev, dept: value }))}>
-                            <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
-                                <SelectValue placeholder="Dept" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-400">
-                                {["CST", "CFS", "EE", "ID", "MTR"].map(dept => (
-                                    <SelectItem key={dept} value={dept.toLowerCase()}>{dept}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
-                        <Select value={filters.sem} onValueChange={(value) => setFilters(prev => ({ ...prev, sem: value }))}>
-                            <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm.">
-                                <SelectValue placeholder="Sem" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-400">
-                                {["1st", "2nd", "3rd", "4th", "5th", "6th"].map(sem => (
-                                    <SelectItem key={sem} value={sem}>{sem}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
-                        <Select value={filters.subject} onValueChange={(value) => setFilters(prev => ({ ...prev, subject: value }))}>
-                            <SelectTrigger className="w-[100px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
-                                <SelectValue placeholder="Subject" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--white-1)] text-stone-400">
-                                {reduxSubjects.map(subject => (
-                                    <SelectItem key={subject._id} value={subject.subject}>
-                                        {subject.subject}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
-                        <RefreshCcw
-                            size="26"
-                            className='cursor-pointer text-[var(--white-7)] p-1.5 rounded-full hover:bg-[var(--white-4)]'
-                            onClick={() => setFilters({ subject: "", dept: "", sem: "", day: "", type: "" })}
-                        />
-                    </div>
+            <div className="mt-10">
+                {isLoading ? (
+                    // Display the CircularLoader when loading
+                    <CircularLoader />
+                ) : (
+                    // Display filtered classes with staggered rendering
+                    filteredClasses.length > 0 ? (
+                        filteredClasses.slice(0, visibleCardCount).map((e, idx) => renderCard(e, idx))
+                    ) : (
+                        <p className="text-[var(--white-6)] text-sm">No upcoming classes found</p>
+                    )
                 )}
-
-                <div className="flex flex-col gap-4">
-                    <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete your schedule.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                    className="bg-red-600 hover:bg-red-700"
-                                    onClick={() => {
-                                        handleDeleteSubject(deleteItem);
-                                        setOpenDeleteDialog(false);
-                                    }}
-                                >
-                                    Delete
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                    <AlertDialog open={openScheduleDialog} onOpenChange={setOpenScheduleDialog}>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Schedule your class</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This action can be changeable. <br /> you can change it later after schedule.
-                                </AlertDialogDescription>
-                                <div className='flex gap-5 items-center mb-6' >
-                                    <Select value={scheduleData.day}
-                                        onValueChange={(e) => handleScheduleSelectChange("day", e)}>
-                                        <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[120px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                            <SelectValue className="h-5" placeholder="Day" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-[var(--white-1)] text-stone-300">
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Monday">Monday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Tuesday">Tuesday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Wednesday">Wednesday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Thursday">Thursday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Friday">Friday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Saturday">Saturday</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <div className='flex gap-3 items-center' >
-                                        <Select
-                                            value={scheduleData.start}
-                                            onValueChange={(value) => { handleScheduleSelectChange('startTime', value) }} >
-                                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[90px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                                <SelectValue className="h-5" placeholder="Start Time" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-[var(--white-1)] text-stone-300 max-h-60 overflow-y-auto">
-                                                {timeOptions}
-                                            </SelectContent>
-                                        </Select>
-
-                                        <span className='text-[var(--white-7)] text-sm ' >To</span>
-
-                                        {/* End Time Selector */}
-                                        <Select
-                                            value={scheduleData.end}
-                                            onValueChange={(value) => handleScheduleSelectChange('endTime', value)}
-                                        >
-                                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[90px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                                <SelectValue className="h-5" placeholder="End Time" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-[var(--white-1)] text-stone-300 max-h-60 overflow-y-auto">
-                                                {timeOptions}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => {
-                                    setOpenScheduleDialog(false);
-                                    setScheduleData({
-                                        subject: "",
-                                        day: "",
-                                        startTime: "",
-                                        endTime: ""
-                                    })
+                <AlertDialog open={cancelledScheduleDialog} onOpenChange={setCancelledScheduleDialog}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This action cannot be undone. This will permanently cancel your schedule.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel className="cursor-pointer" >Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                className="bg-red-600 hover:bg-red-700 cursor-pointer"
+                                onClick={() => {
+                                    console.log(cancelItem)
+                                    if (cancelItem) {
+                                        handleCancelSubject(cancelItem);
+                                    }
+                                    setCancelledScheduleDialog(false);
                                 }}
-                                    className="cursor-pointer"
-                                >Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                    className="bg-red-600 cursor-pointer hover:bg-red-700"
-                                    onClick={() => {
-                                        handleScheduleSubject(scheduleItem);
-                                        setOpenDeleteDialog(false);
-                                        setScheduleData({
-                                            subject: "",
-                                            day: "",
-                                            startTime: "",
-                                            endTime: ""
-                                        })
-                                    }}
-                                >
-                                    Apply
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                    <AlertDialog open={openSubjectScheduleDialog} onOpenChange={setOpenSubjectScheduleDialog}>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>All Schedules</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    It shows all schedules based on the week.
-                                </AlertDialogDescription>
-                                {subjectSchedules?.map((e, idx) => (
-                                    <div key={idx} className="flex gap-2 items-center">
-                                        <div className="bg-teal-200 px-3 py-0.5 text-sm rounded-md">{e.day}</div>
-                                        <div className="text-sm bg-amber-100 px-2 py-0.5 rounded-md">{e.startTime}</div>
-                                        <div className="text-sm bg-amber-100 px-2 py-0.5 rounded-md">{e.endTime}</div>
-                                        <div className="text-sm bg-amber-100 px-2 py-0.5 rounded-md">{e.duration}</div>
-                                        {user.role !== "student" && ( // Conditionally render Trash2 icon for non-students
-                                            <Trash2
-                                                className="text-red-500 cursor-pointer hover:bg-red-100 rounded-full p-1"
-                                                size={24}
-                                                onClick={() => handleDeleteSchedule(e.scheduleId, e.subject._id)}
-                                            />
-                                        )}
-                                    </div>
-                                ))}
-
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => {
-                                    setOpenSubjectScheduleDialog(false);
-                                }}
-                                    className="cursor-pointer"
-                                >Close</AlertDialogCancel>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-
-                    {reduxSubjects.length === 0 && <h1>No subject added...</h1>}
-
-                    {filteredSubjects.map((e) => (
-                        <div
-                            key={e._id + "-" + Date.now()}
-                            className="w-full h-24 px-5 py-2 rounded-md bg-[var(--card)]"
-                        >
-                            <div className="flex justify-between items-start">
-                                <div className="w-full">
-                                    <div className="flex justify-between pr-5 w-full">
-                                        <h2 className="text-[var(--white-8)] text-lg leading-3 mt-1.5 flex items-center gap-1.5 font-extrabold">
-                                            {e.subject}
-                                            <Coffee size="15" />
-                                        </h2>
-                                        <span className="bg-[var(--white-4)] px-3 rounded-2xl text-[var(--white-7)]">
-                                            {e.code}
-                                        </span>
-                                    </div>
-                                    <h3 className="text-md text-[var(--white-8)]">Teacher: {e.teacher}</h3>
-                                    <div className="flex gap-2 text-xs">
-                                        <span className="bg-emerald-300 px-3 rounded-2xl py-0.5">{e.department}</span>
-                                        <span className="bg-teal-200 px-3 rounded-2xl py-0.5">{e.semester}</span>
-                                    </div>
-                                </div>
-                                {user.role !== "student" && ( // Conditionally render the Ellipsis icon
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger>
-                                            <Ellipsis className="cursor-pointer text-[var(--white-9)]" />
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                onClick={() => {
-                                                    setScheduleItem(e._id);
-                                                    setOpenScheduleDialog(true);
-                                                }}
-                                                className="cursor-pointer"
-                                            >
-                                                Set Schedule
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                onClick={() => {
-                                                    setOpenSubjectScheduleDialog(true);
-                                                    fetchSubjectSchedule(e._id);
-                                                }}
-                                                className="cursor-pointer"
-                                            >
-                                                View Schedule
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                onClick={() => {
-                                                    setDeleteItem(e._id);
-                                                    setOpenDeleteDialog(true);
-                                                }}
-                                                className="text-red-500 cursor-pointer"
-                                            >
-                                                Delete Subject
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            >
+                                Apply
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </div>
     );
 };
 
-export default Subject;
+export default UpcomingClasses;

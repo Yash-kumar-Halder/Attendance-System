@@ -51,4 +51,28 @@
     font-size: 14px;
 }
 
-  
+/* In your globals.css or equivalent */
+/* In UpcomingClasses.module.css */
+
+.fadeIn {
+    animation: fadeIn 0.8s ease-out forwards;
+    transition: all 1s ease;
+}
+
+
+.fade-in-card {
+    animation: fadeIn 0.5s ease-out forwards; /* Adjust duration and timing function as needed */
+}
+
+/* In your global CSS file (e.g., globals.css) */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px); /* Starts slightly below its final position */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Ends at its original position */
+    }
+}

@@ -2,33 +2,59 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Coffee, Ellipsis, NotebookPen, User } from 'lucide-react';
 import { getCurrentDay, getCurrentTimeInMinutes } from '../../Utils/timeUtils.js';
-import ActiveClassesCard from '../Skeleton/ActiveClassesCard.jsx';
+import ActiveClassesCard from '../Skeleton/ActiveClassesCard.jsx'; // This might be a skeleton loader component, we'll keep it.
 import { Button } from '../ui/button.jsx';
 import { toast } from 'sonner';
-import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Import the new component
+import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Correctly imported
 import { useAppSelector } from '@/hooks/index.js';
 
 const Classes = () => {
 
-    // Get the user object from the Redux store
     const user = useAppSelector(state => state.user);
-    const isStudent = user?.role === "student"; // A boolean flag for easy checking
+    const isStudent = user?.role === "student";
 
     const [activeClasses, setActiveClasses] = useState([]);
     const [upcomingClasses, setUpcomingClasses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [markedAttendances, setMarkedAttendances] = useState({}); // To store attendance status for active classes
-    const [cancelledClasses, setCancelledClasses] = useState({}); // To store cancelled classes for today
+    const [markedAttendances, setMarkedAttendances] = useState({});
+    const [cancelledClasses, setCancelledClasses] = useState({});
+
+    // New state for staggered card animation
+    const [visibleCardCount, setVisibleCardCount] = useState(0);
 
     useEffect(() => {
-        // Only fetch attendance and cancelled classes if the user is a student
-        if (isStudent) {
-            fetchScheduleAndAttendanceData();
-        } else {
-            // If not a student, just fetch schedules, no need for attendance/cancellation checks
-            fetchSchedulesOnly();
+        const fetchData = async () => {
+            setIsLoading(true);
+            setVisibleCardCount(0); // Reset visible count on new data fetch
+
+            // Fetch schedules and attendance/cancellations based on user role
+            if (isStudent) {
+                await fetchScheduleAndAttendanceData();
+            } else {
+                await fetchSchedulesOnly();
+            }
+
+            setIsLoading(false); // Set loading to false after data is fetched
+        };
+
+        fetchData();
+    }, [isStudent]); // Dependencies: re-run effect if isStudent changes
+
+    // Effect for staggered rendering of cards
+    useEffect(() => {
+        // If not loading and there are cards to show, and not all cards are visible yet
+        if (!isLoading && (activeClasses.length + upcomingClasses.length) > 0 && visibleCardCount < (activeClasses.length + upcomingClasses.length)) {
+            const timer = setTimeout(() => {
+                setVisibleCardCount((prevCount) => prevCount + 1);
+            }, 100); // Adjust delay here for staggering
+            return () => clearTimeout(timer);
         }
-    }, [isStudent]); // Re-run effect if isStudent changes (though typically it won't after initial load)
+        // If loading starts or there are no cards, reset the count
+        if (isLoading || (activeClasses.length + upcomingClasses.length) === 0) {
+            setVisibleCardCount(0);
+        }
+    }, [isLoading, visibleCardCount, activeClasses.length, upcomingClasses.length]);
+
 
     const getValidToken = async () => {
         let token = localStorage.getItem("accessToken");
@@ -57,10 +83,8 @@ const Classes = () => {
         }
     };
 
-    // New function to fetch only schedules (for teachers or other roles)
     const fetchSchedulesOnly = async () => {
         try {
-            setIsLoading(true);
             const token = await getValidToken();
 
             const scheduleRes = await axios.post("http://localhost:8000/api/v1/schedule/get", {}, {
@@ -83,15 +107,12 @@ const Classes = () => {
         } catch (error) {
             console.error("Error fetching schedule data for non-student:", error);
             toast.error("Failed to fetch class data.");
-        } finally {
-            setIsLoading(false);
         }
     };
 
 
     const fetchScheduleAndAttendanceData = async () => {
         try {
-            setIsLoading(true);
             const token = await getValidToken();
 
             // Fetch schedules
@@ -137,7 +158,7 @@ const Classes = () => {
                     setMarkedAttendances(markedMap);
                 }
 
-                // Fetch cancelled classes for today (Can be for both, but we'll conditionally show for student)
+                // Fetch cancelled classes for today
                 const cancelledClassesRes = await axios.get(
                     "http://localhost:8000/api/v1/classes/cancelled-classes/today",
                     {
@@ -158,8 +179,6 @@ const Classes = () => {
         } catch (error) {
             console.error("Error fetching data:", error);
             toast.error("Failed to fetch class data.");
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -172,7 +191,6 @@ const Classes = () => {
     };
 
     const markAttendance = async (e) => {
-        // Ensure only students can mark attendance
         if (!isStudent) {
             toast.error("Only students can mark attendance.");
             return;
@@ -192,7 +210,6 @@ const Classes = () => {
                 }
             );
             toast.success(response.data.message);
-            // Update the attendance status locally after successful marking
             setMarkedAttendances(prev => ({ ...prev, [e._id]: true }));
         } catch (error) {
             if (error.response && error.response.data && error.response.data.message) {
@@ -209,7 +226,10 @@ const Classes = () => {
 
     const currentTime = getCurrentTimeInMinutes();
 
-    const renderCard = (e, type) => {
+    // Combine active and upcoming classes into a single array for easier mapping and staggering
+    const allClasses = [...activeClasses, ...upcomingClasses];
+
+    const renderCard = (e, type, index) => { // Added index for staggering
         if (!e || !e.subject) return null;
 
         const endTimeFormatted = formatMinutesToTime(e.endTime);
@@ -217,10 +237,13 @@ const Classes = () => {
         const duration = e.endTime - currentTime;
 
         const isAttendanceMarked = markedAttendances[e._id];
-        const isClassCancelled = cancelledClasses[e._id]; // Check if this class slot is cancelled
+        const isClassCancelled = cancelledClasses[e._id];
+
+        // Apply fade-in-card class conditionally based on visibleCardCount
+        const cardClassName = `w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)] fade-in-card`; // Add fade-in-card
 
         return (
-            <div key={e._id} className="w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)]">
+            <div key={e._id} className={cardClassName} style={{ animationDelay: `${index * 50}ms` }}>
                 <div className="flex justify-between items-start">
                     <div className="w-full ">
                         <div className="flex items-center justify-between pr-5 w-full">
@@ -253,8 +276,7 @@ const Classes = () => {
                                     )}
                                 </div>
                             </div>
-                            {/* Conditional rendering based on user role */}
-                            {isStudent && type === "active" ? ( // Only show attendance/status for students in active classes
+                            {isStudent && type === "active" ? (
                                 isClassCancelled ? (
                                     <span className="text-xs py-1.5 text-white px-3 rounded-md bg-red-600">Cancelled</span>
                                 ) : isAttendanceMarked ? (
@@ -268,9 +290,6 @@ const Classes = () => {
                                     </button>
                                 )
                             ) : (
-                                // For teachers or non-active classes, you can show a different button or nothing
-                                // For teachers, you might display 'View Roster' or nothing here.
-                                // For now, we'll just show 'More Info' for teachers if they are in active classes.
                                 type === "active" && user?.role === "teacher" && (
                                     <span className="text-xs py-1.5 text-white px-3 rounded-md bg-gray-600">View Details</span>
                                 )
@@ -283,8 +302,8 @@ const Classes = () => {
     };
 
     return (
-        <div className='px-[2.5%] py-[1.5%] min-h-[calc(100vh-40px)] bg-[var(--bg)]'>
-            <div>
+        <div className='px-[2.5%] py-[1.5%] min-h-[calc(100vh-40px)] bg-[var(--bg)] flex flex-col items-center'>
+            <div className='w-full'> {/* Added a wrapper div for consistent layout */}
                 <h1 className='text-2xl font-extrabold text-[var(--white-9)]'>Classes</h1>
                 <span className='flex items-center gap-1 text-xs text-stone-400'><User size="14" />Total: {activeClasses.length + upcomingClasses.length}</span>
             </div>
@@ -292,21 +311,24 @@ const Classes = () => {
             {isLoading ? (
                 <CircularLoader />
             ) : (
-                <>
+                <div className='w-full'> {/* This div holds the class lists, will become visible instantly after loading */}
                     <h2 className='text-green-400 text-xl font-bold mt-4'>Active Classes</h2>
                     {activeClasses.length > 0 ? (
-                        activeClasses.map(e => renderCard(e, "active"))
+                        // Map over active classes, apply fade-in only to currently visible cards
+                        activeClasses.slice(0, visibleCardCount).map((e, index) => renderCard(e, "active", index))
                     ) : (
                         <p className="text-stone-400 text-sm mt-2">No active classes right now.</p>
                     )}
 
                     <h2 className='text-teal-400 text-xl font-bold mt-8 mb-3'>Upcoming Classes</h2>
                     {upcomingClasses.length > 0 ? (
-                        upcomingClasses.map(e => renderCard(e, "upcoming"))
+                        // Map over upcoming classes, continue the staggering from where active classes left off
+                        upcomingClasses.slice(0, visibleCardCount - activeClasses.length > 0 ? visibleCardCount - activeClasses.length : 0)
+                            .map((e, index) => renderCard(e, "upcoming", index + activeClasses.length)) // Adjust index
                     ) : (
                         <p className="text-stone-400 text-sm mt-2">No upcoming classes for today.</p>
                     )}
-                </>
+                </div>
             )}
         </div>
     );

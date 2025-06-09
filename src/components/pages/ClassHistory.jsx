@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getValidToken } from '@/Utils/getValidToken';
 import axios from 'axios';
-import { NotebookPen, RefreshCcw, Eye } from 'lucide-react'; // Import Eye icon
+import { NotebookPen, RefreshCcw, Eye } from 'lucide-react';
 import { fetchSubjects } from '@/Utils/FetchSubjects';
 import { useAppSelector } from '@/hooks';
 import {
@@ -19,8 +19,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogDescription,
-} from '@/components/ui/alert-dialog'; // Import AlertDialog components
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Import CircularLoader
 
 const ClassHistory = () => {
     const user = useAppSelector((state) => state.user);
@@ -30,14 +31,17 @@ const ClassHistory = () => {
         subject: "", dept: "", sem: "", day: "", type: ""
     });
 
-    // New states for attendance details
     const [attendanceDetailDialog, setAttendanceDetailDialog] = useState(false);
     const [presentStudents, setPresentStudents] = useState([]);
     const [currentClassForAttendance, setCurrentClassForAttendance] = useState(null);
 
+    const [visibleCardCount, setVisibleCardCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(true); // New state for loading
+
 
     const fetchClassHistory = async () => {
         try {
+            setIsLoading(true); // Set loading to true before fetching
             const token = await getValidToken();
             const response = await axios.post(
                 "http://localhost:8000/api/v1/classes/history",
@@ -49,13 +53,16 @@ const ClassHistory = () => {
             );
             if (response.data.success) {
                 setPastClasses(response.data.pastClasses);
+                setVisibleCardCount(0);
             }
         } catch (error) {
             console.error("Error fetching schedule data", error);
+            toast.error("Failed to fetch class history.");
+        } finally {
+            setIsLoading(false); // Set loading to false after fetching (success or error)
         }
     };
 
-    // New function to fetch students present in a specific class
     const fetchStudentsPresent = async (scheduleSlotId, date) => {
         try {
             const token = await getValidToken();
@@ -68,7 +75,7 @@ const ClassHistory = () => {
             );
             if (response.data.success) {
                 setPresentStudents(response.data.data);
-                setAttendanceDetailDialog(true); // Open the dialog on successful fetch
+                setAttendanceDetailDialog(true);
             } else {
                 toast.error(response.data.message);
             }
@@ -81,18 +88,25 @@ const ClassHistory = () => {
 
 
     const fetchSubjectsData = async () => {
-        const data = await fetchSubjects(user);
-        setSubjects(data);
+        try {
+            const data = await fetchSubjects(user);
+            setSubjects(data);
+        } catch (error) {
+            console.error('Error fetching subjects', error);
+            toast.error("Failed to fetch subjects data.");
+        }
     };
 
     useEffect(() => {
-        fetchSubjectsData();
-        fetchClassHistory();
+        const loadData = async () => {
+            setIsLoading(true); // Ensure loading is true when initial data loads
+            await Promise.all([fetchSubjectsData(), fetchClassHistory()]);
+            // setIsLoading(false); // This will be handled by fetchClassHistory's finally block
+        };
+        loadData();
     }, []);
 
     const filteredClasses = pastClasses.filter((cls) => {
-        // Apply teacher-specific filters only if the user is a teacher
-        // Students should see all their relevant history without these filters
         if (user.role === "teacher") {
             const { subject, dept, sem, day, type } = filters;
             return (!subject || cls.subject === subject) &&
@@ -101,11 +115,31 @@ const ClassHistory = () => {
                 (!day || cls.day.toLowerCase() === day.toLowerCase()) &&
                 (!type || (type === "Cancelled" ? cls.isCancelled : !cls.isCancelled));
         }
-        return true; // Students see all classes relevant to them
+        return true;
     });
 
+    useEffect(() => {
+        if (!isLoading && filteredClasses.length > 0 && visibleCardCount < filteredClasses.length) {
+            const timer = setTimeout(() => {
+                setVisibleCardCount((prevCount) => prevCount + 1);
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+        // If filters change and there are no classes, or if loading, reset visibleCardCount to 0
+        if ((!isLoading && filteredClasses.length === 0) || isLoading) {
+            setVisibleCardCount(0);
+        }
+    }, [isLoading, filteredClasses, visibleCardCount]);
+
+
+    const clearFilter = () => {
+        setFilters({ subject: "", dept: "", sem: "", day: "", type: "" });
+        setVisibleCardCount(0);
+        fetchClassHistory(); // Re-fetch all history to reset filters completely
+    };
+
     const renderCard = (e, idx) => (
-        <div key={idx} className="w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)]">
+        <div key={idx} className="w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)] fade-in-card">
             <div className="flex justify-between items-start">
                 <div className="w-full">
                     <div className="flex items-center justify-between pr-5 w-full">
@@ -147,7 +181,7 @@ const ClassHistory = () => {
                         {user.role === "teacher" ? (
                             <button
                                 onClick={() => {
-                                    setCurrentClassForAttendance(e); // Store current class data
+                                    setCurrentClassForAttendance(e);
                                     fetchStudentsPresent(e.scheduleSlotId, e.date);
                                 }}
                                 className="text-xs py-1.5 text-white px-3 rounded-md bg-blue-600 hover:bg-blue-700 cursor-pointer flex items-center gap-1"
@@ -177,7 +211,7 @@ const ClassHistory = () => {
 
             {user.role === "teacher" && (
                 <div className="filter-container rounded-sm w-full flex items-center gap-3">
-                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, day: value }))} value={filters.day}>
+                    <Select onValueChange={(value) => { setFilters(prev => ({ ...prev, day: value })); setVisibleCardCount(0); }} value={filters.day}>
                         <SelectTrigger className="w-[120px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Day" />
                         </SelectTrigger>
@@ -187,7 +221,7 @@ const ClassHistory = () => {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, dept: value }))} value={filters.dept}>
+                    <Select onValueChange={(value) => { setFilters(prev => ({ ...prev, dept: value })); setVisibleCardCount(0); }} value={filters.dept}>
                         <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Dept" />
                         </SelectTrigger>
@@ -197,7 +231,7 @@ const ClassHistory = () => {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, sem: value }))} value={filters.sem}>
+                    <Select onValueChange={(value) => { setFilters(prev => ({ ...prev, sem: value })); setVisibleCardCount(0); }} value={filters.sem}>
                         <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Sem" />
                         </SelectTrigger>
@@ -207,7 +241,7 @@ const ClassHistory = () => {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, subject: value }))} value={filters.subject}>
+                    <Select onValueChange={(value) => { setFilters(prev => ({ ...prev, subject: value })); setVisibleCardCount(0); }} value={filters.subject}>
                         <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Subject" />
                         </SelectTrigger>
@@ -219,7 +253,7 @@ const ClassHistory = () => {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))} value={filters.type}>
+                    <Select onValueChange={(value) => { setFilters(prev => ({ ...prev, type: value })); setVisibleCardCount(0); }} value={filters.type}>
                         <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Type" />
                         </SelectTrigger>
@@ -231,16 +265,20 @@ const ClassHistory = () => {
                     <RefreshCcw
                         size="26"
                         className='cursor-pointer text-[var(--white-7)] p-1.5 rounded-full hover:bg-[var(--white-4)]'
-                        onClick={() => setFilters({ subject: "", dept: "", sem: "", day: "", type: "" })}
+                        onClick={clearFilter}
                     />
                 </div>
             )}
 
             <div className='mt-10'>
-                {filteredClasses.length > 0 ? (
-                    filteredClasses.map((e, idx) => renderCard(e, idx))
+                {isLoading ? (
+                    <CircularLoader /> // Show loader when isLoading is true
                 ) : (
-                    <p className="text-[var(--white-6)] text-sm">No class history found matching your criteria.</p>
+                    filteredClasses.length > 0 ? (
+                        filteredClasses.slice(0, visibleCardCount).map((e, idx) => renderCard(e, idx))
+                    ) : (
+                        <p className="text-[var(--white-6)] text-sm">No class history found matching your criteria.</p>
+                    )
                 )}
 
                 {/* Attendance Details Dialog */}
