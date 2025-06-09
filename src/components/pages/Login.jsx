@@ -40,6 +40,8 @@ const Login = () => {
                         email: user.email,
                         regNo: user.regNo,
                         role: user.role,
+                        department: user.department,
+                        semester: user.semester,
                         accessToken: accessToken,
                     })
                 );

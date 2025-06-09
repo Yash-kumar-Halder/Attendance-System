@@ -13,6 +13,7 @@ import ScheduleClasses from './components/pages/ScheduleClasses'
 import Subject from './components/pages/Subject'
 import AllStudents from './components/pages/AllStudents'
 import ClassHistory from './components/pages/ClassHistory'
+import Attendance from './components/pages/Attendance'
 
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
             <Route path='schedule-classes' element={<ScheduleClasses />} ></Route>
             <Route path='add-subject' element={<Subject />} ></Route>
             <Route path='class-history' element={<ClassHistory />} ></Route>
+            <Route path='attendance' element={<Attendance />} ></Route>
           </Route>
         </Routes>
       </BrowserRouter>

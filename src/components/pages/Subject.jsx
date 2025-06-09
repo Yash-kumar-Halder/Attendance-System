@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Coffee, Ellipsis, User } from 'lucide-react';
+import { Coffee, Ellipsis, RefreshCcw, Trash2, User } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
     AlertDialog,
@@ -39,9 +39,20 @@ const Subject = () => {
 
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [openScheduleDialog, setOpenScheduleDialog] = useState(false);
+    const [openSubjectScheduleDialog, setOpenSubjectScheduleDialog] = useState(false);
+
+
+    const [subjectSchedules, setSubjectSchedules] = useState([]);
     const [deleteItem, setDeleteItem] = useState("");
     const [scheduleItem, setScheduleItem] = useState("");
     const [isSkeleton, setIsSkeleton] = useState(true)
+    const [filters, setFilters] = useState({
+        subject: "",
+        dept: "",
+        sem: "",
+        day: "",
+        type: ""
+    });
     const [data, setData] = useState({
         subject: "",
         code: "",
@@ -116,6 +127,14 @@ const Subject = () => {
         }
     };
 
+    const filteredSubjects = reduxSubjects.filter((e) => {
+        if (filters.subject && e.subject !== filters.subject) return false;
+        if (filters.dept && e.department.toLowerCase() !== filters.dept) return false;
+        if (filters.sem && e.semester !== filters.sem) return false;
+        // If you implement day/type filters in future, add logic here
+        return true;
+    });
+
     useEffect(() => {
         fetchSubjects();
     }, []);
@@ -135,6 +154,26 @@ const Subject = () => {
         }));
     };
 
+    const handleDeleteSubject = async (id) => {
+        try {
+            const token = await getValidToken();
+            const response = await axios.delete(
+                `http://localhost:8000/api/v1/subject/delete/${id}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                }
+            );
+
+            if (response.data.success) {
+                toast.success(response.data.message);
+                fetchSubjects();
+            }
+        } catch (error) {
+            console.error("Delete Error:", error);
+            toast.error("Failed to delete subject");
+        }
+    };
 
     const handleSelectChange = (type, value) => {
         setData((prev) => ({
@@ -171,27 +210,6 @@ const Subject = () => {
         }
     };
 
-    const handleDeleteSubject = async (id) => {
-        try {
-            const token = await getValidToken();
-            const response = await axios.delete(
-                `http://localhost:8000/api/v1/subject/delete/${id}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true,
-                }
-            );
-
-            if (response.data.success) {
-                toast.success(response.data.message);
-                fetchSubjects();
-            }
-        } catch (error) {
-            console.error("Delete Error:", error);
-            toast.error("Failed to delete subject");
-        }
-    };
-
     const handleScheduleSubject = async (id) => {
         try {
             const updatedData = {
@@ -203,7 +221,7 @@ const Subject = () => {
 
             const token = await getValidToken();
             const response = await axios.post(
-                `http://localhost:8000/api/v1/shedule/set`,
+                `http://localhost:8000/api/v1/schedule/set`,
                 updatedData, // ✅ send correct data
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -220,6 +238,56 @@ const Subject = () => {
         }
     };
 
+    const fetchSubjectSchedule = async (subjectId) => {
+        try {
+            setIsSkeleton(true);
+            const token = await getValidToken();
+            const res = await axios.post("http://localhost:8000/api/v1/schedule/subject/schedule",
+                { subjectId },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                });
+
+            if (res.data.success) {
+                const responceSchedules = res.data.schedules;
+                setSubjectSchedules(responceSchedules);
+            }
+        } catch (error) {
+            console.error("Error fetching schedule data", error);
+        } finally {
+            setIsSkeleton(false);
+        }
+    }
+
+    const handleDeleteSchedule = async (scheduleId, subjectId) => {
+        try {
+            const token = await getValidToken();
+
+            const res = await axios.post(
+                `http://localhost:8000/api/v1/schedule/subject/delete`,
+                { scheduleId },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                }
+            );
+
+            if (res.data.success) {
+                toast.success("Schedule deleted");
+                // fetchSubjectSchedule(scheduleData.subject);
+                fetchSubjectSchedule(subjectId)
+            } else {
+                toast.error("Failed to delete schedule");
+            }
+        } catch (error) {
+            console.error("Error deleting schedule:", error);
+            toast.error("Something went wrong");
+        }
+    };
+    
+    
+    
 
     const timeOptions = Array.from({ length: 8 }, (_, hourIndex) => {
         const hour = 10 + hourIndex;
@@ -313,7 +381,7 @@ const Subject = () => {
                                 <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[300px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
                                     <SelectValue className="h-5" placeholder="Dept" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-[var(--white-1)] text-stone-300">
+                                <SelectContent className="bg-[var(--white-1)] text-stone-500">
                                     <SelectItem value="CST">CST</SelectItem>
                                     <SelectItem value="CFS">CFS</SelectItem>
                                     <SelectItem value="EE">EE</SelectItem>
@@ -329,7 +397,7 @@ const Subject = () => {
                                 <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[250px] h-10 mt-1.5 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
                                     <SelectValue className="h-5" placeholder="Sem" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-[var(--white-1)] text-stone-300">
+                                <SelectContent className="bg-[var(--white-1)] text-stone-500">
                                     <SelectItem value="1st">1st</SelectItem>
                                     <SelectItem value="2nd">2nd</SelectItem>
                                     <SelectItem value="3rd">3rd</SelectItem>
@@ -349,7 +417,53 @@ const Subject = () => {
                 </form></>)}
 
             <div>
-                <h1 className="text-lg font-bold mb-4">All Classes</h1>
+                <h1 className="text-2xl text-yellow-500 font-bold mb-4">Classes</h1>
+                {user.role === "teacher" && (
+                    <div className="filter-container rounded-sm w-full flex items-center gap-3 mb-4">
+
+                        <Select value={filters.dept} onValueChange={(value) => setFilters(prev => ({ ...prev, dept: value }))}>
+                            <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
+                                <SelectValue placeholder="Dept" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[var(--white-1)] text-stone-400">
+                                {["CST", "CFS", "EE", "ID", "MTR"].map(dept => (
+                                    <SelectItem key={dept} value={dept.toLowerCase()}>{dept}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={filters.sem} onValueChange={(value) => setFilters(prev => ({ ...prev, sem: value }))}>
+                            <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm.">
+                                <SelectValue placeholder="Sem" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[var(--white-1)] text-stone-400">
+                                {["1st", "2nd", "3rd", "4th", "5th", "6th"].map(sem => (
+                                    <SelectItem key={sem} value={sem}>{sem}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={filters.subject} onValueChange={(value) => setFilters(prev => ({ ...prev, subject: value }))}>
+                            <SelectTrigger className="w-[100px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
+                                <SelectValue placeholder="Subject" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[var(--white-1)] text-stone-400">
+                                {reduxSubjects.map(subject => (
+                                    <SelectItem key={subject._id} value={subject.subject}>
+                                        {subject.subject}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <RefreshCcw
+                            size="26"
+                            className='cursor-pointer text-[var(--white-7)] p-1.5 rounded-full hover:bg-[var(--white-4)]'
+                            onClick={() => setFilters({ subject: "", dept: "", sem: "", day: "", type: "" })}
+                        />
+                    </div>
+                )}
+
                 <div className="flex flex-col gap-4">
                     <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
                         <AlertDialogContent>
@@ -390,7 +504,7 @@ const Subject = () => {
                                             <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Monday">Monday</SelectItem>
                                             <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Tuesday">Tuesday</SelectItem>
                                             <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Wednesday">Wednesday</SelectItem>
-                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Thrursday">Thrursday</SelectItem>
+                                            <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Thursday">Thursday</SelectItem>
                                             <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Friday">Friday</SelectItem>
                                             <SelectItem className="cursor-pointer hover:bg[var(--white-2)] text-[var(--white-6)] " value="Saturday">Saturday</SelectItem>
                                         </SelectContent>
@@ -398,8 +512,7 @@ const Subject = () => {
                                     <div className='flex gap-3 items-center' >
                                         <Select
                                             value={scheduleData.start}
-                                            onValueChange={(value) => handleScheduleSelectChange('startTime', value)}
-                                        >
+                                            onValueChange={(value) => { handleScheduleSelectChange('startTime', value) }} >
                                             <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[90px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
                                                 <SelectValue className="h-5" placeholder="Start Time" />
                                             </SelectTrigger>
@@ -422,43 +535,18 @@ const Subject = () => {
                                                 {timeOptions}
                                             </SelectContent>
                                         </Select>
-
-
-
-                                        {/* <Select
-                                            value={scheduleData.end}
-                                            onValueChange={(value) => handleScheduleSelectChange('end', value)}
-                                        >
-                                            <SelectTrigger className="cursor-pointer hover:border-amber-500 w-[90px] h-6 rounded-[4px] bg-[var(--white-2)] border border-[var(--white-6)] text-stone-400 text-sm placeholder:text-stone-100">
-                                                <SelectValue className="h-5" placeholder="End" />
-                                            </SelectTrigger>
-
-                                            <SelectContent className="bg-[var(--white-1)] text-stone-300 max-h-60 overflow-y-auto">
-                                                {Array.from({ length: 8 }, (_, hourIndex) => {
-                                                    const hour = 10 + hourIndex;
-                                                    return Array.from({ length: 6 }, (_, minIndex) => {
-                                                        const minute = minIndex * 10;
-                                                        if (hour === 17 && minute > 0) return null; // Only allow 17:00
-                                                        const timeValue = `${hour}:${minute.toString().padStart(2, '0')}`;
-                                                        return (
-                                                            <SelectItem
-                                                                key={timeValue}
-                                                                className="cursor-pointer hover:bg-[var(--white-2)] text-[var(--white-6)]"
-                                                                value={timeValue}
-                                                            >
-                                                                {timeValue}
-                                                            </SelectItem>
-                                                        );
-                                                    }).filter(Boolean);
-                                                }).flat()}
-                                            </SelectContent>
-                                        </Select> */}
                                     </div>
                                 </div>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel onClick={() => {
-                                    setOpenScheduleDialog(false)
+                                    setOpenScheduleDialog(false);
+                                    setScheduleData({
+                                        subject: "",
+                                        day: "",
+                                        startTime: "",
+                                        endTime: ""
+                                    })
                                 }}
                                     className="cursor-pointer"
                                 >Cancel</AlertDialogCancel>
@@ -467,6 +555,12 @@ const Subject = () => {
                                     onClick={() => {
                                         handleScheduleSubject(scheduleItem);
                                         setOpenDeleteDialog(false);
+                                        setScheduleData({
+                                            subject: "",
+                                            day: "",
+                                            startTime: "",
+                                            endTime: ""
+                                        })
                                     }}
                                 >
                                     Apply
@@ -474,10 +568,41 @@ const Subject = () => {
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
+                    <AlertDialog open={openSubjectScheduleDialog} onOpenChange={setOpenSubjectScheduleDialog}>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>All Schedules</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    It show all schedule base on week.
+                                </AlertDialogDescription>
+                                {subjectSchedules?.map((e, idx) => (
+                                    <div key={idx} className="flex gap-2 items-center">
+                                        <div className="bg-teal-200 px-3 py-0.5 text-sm rounded-md">{e.day}</div>
+                                        <div className="text-sm bg-amber-100 px-2 py-0.5 rounded-md">{e.startTime}</div>
+                                        <div className="text-sm bg-amber-100 px-2 py-0.5 rounded-md">{e.endTime}</div>
+                                        <div className="text-sm bg-amber-100 px-2 py-0.5 rounded-md">{e.duration}</div>
+                                        <Trash2
+                                            className="text-red-500 cursor-pointer hover:bg-red-100 rounded-full p-1"
+                                            size={24}
+                                            onClick={() => handleDeleteSchedule(e.scheduleId, e.subject._id)}
+                                        />
+                                    </div>
+                                ))}
+
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel onClick={() => {
+                                    setOpenSubjectScheduleDialog(false);
+                                }}
+                                    className="cursor-pointer"
+                                >Close</AlertDialogCancel>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
 
                     {reduxSubjects.length === 0 && <h1>No subject added...</h1>}
 
-                    {reduxSubjects.map((e) => (
+                    {filteredSubjects.map((e) => (
                         <div
                             key={e._id + "-" + Date.now()}
                             className="w-full h-24 px-5 py-2 rounded-md bg-[var(--card)]"
@@ -511,9 +636,10 @@ const Subject = () => {
                                                 setScheduleItem(e._id);
                                                 setOpenScheduleDialog(true);
                                             }}
-                                            className="text-teal-500 hover:bg-teal-100 cursor-pointer">Schedule</DropdownMenuItem>
-                                        <DropdownMenuItem>Billing</DropdownMenuItem>
-                                        <DropdownMenuItem>Team</DropdownMenuItem>
+                                            className="text-teal-500 hover:bg-teal-100 cursor-pointer">Set Schedule</DropdownMenuItem>
+                                        <DropdownMenuItem className="text-green-500 hover:bg-green-100 cursor-pointer" onClick={() => {
+                                            fetchSubjectSchedule(e._id); setOpenSubjectScheduleDialog(true)
+                                        }} >View Schedule</DropdownMenuItem>
                                         <DropdownMenuItem
                                             className="text-red-500 cursor-pointer hover:bg-red-200"
                                             onClick={() => {

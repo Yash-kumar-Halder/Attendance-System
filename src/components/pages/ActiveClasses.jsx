@@ -5,21 +5,47 @@ import { getCurrentDay, getCurrentTimeInMinutes } from '../../Utils/timeUtils.js
 import ActiveClassesCard from '../Skeleton/ActiveClassesCard.jsx';
 import { Button } from '../ui/button.jsx';
 import { toast } from 'sonner';
+import CircularLoader from '../MyComponents/CircularLoader.jsx';
+import { useAppSelector } from '@/hooks/index.js';
+
+// Import Shadcn Dialog components
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "../ui/dialog.jsx"; // Adjust path as per your project structure
 
 const Classes = () => {
+    const user = useAppSelector(state => state.user);
+    const isStudent = user?.role === "student";
+
     const [activeClasses, setActiveClasses] = useState([]);
     const [upcomingClasses, setUpcomingClasses] = useState([]);
-    const [allSchedules, setAllSchedules] = useState([]);
-    const [isSkeleton, setIsSetskeleton] = useState(true)
+    const [isLoading, setIsLoading] = useState(true);
+    const [markedAttendances, setMarkedAttendances] = useState({});
+    const [cancelledClasses, setCancelledClasses] = useState({});
+
+    // State for the Shadcn Dialog
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [dialogStudents, setDialogStudents] = useState([]);
+    const [dialogClassInfo, setDialogClassInfo] = useState(null);
+    const [isFetchingStudents, setIsFetchingStudents] = useState(false);
 
     useEffect(() => {
-        fetchScheduleData();
-    }, []);
+        if (isStudent) {
+            fetchScheduleAndAttendanceData();
+        } else {
+            fetchSchedulesOnly();
+        }
+    }, [isStudent]);
 
     const getValidToken = async () => {
         let token = localStorage.getItem("accessToken");
         try {
-            // Try a dummy request to check token validity
             await axios.get("http://localhost:8000/api/v1/subject/get", {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
@@ -27,7 +53,6 @@ const Classes = () => {
             return token;
         } catch (error) {
             if (error.response?.status === 401 || error.response?.status === 403) {
-                // Refresh token
                 try {
                     const refreshResponse = await axios.get(
                         "http://localhost:8000/api/v1/auth/refresh-token",
@@ -37,7 +62,6 @@ const Classes = () => {
                     localStorage.setItem("accessToken", newToken);
                     return newToken;
                 } catch (refreshError) {
-                    // Handle refresh token failure - logout or notify user here if needed
                     toast.error("Session expired. Please login again.");
                     throw refreshError;
                 }
@@ -46,17 +70,18 @@ const Classes = () => {
         }
     };
 
-    const fetchScheduleData = async () => {
+    const fetchSchedulesOnly = async () => {
         try {
-            setIsSetskeleton(true);
+            setIsLoading(true);
             const token = await getValidToken();
-            const res = await axios.post("http://localhost:8000/api/v1/shedule/get", {}, {
+
+            const scheduleRes = await axios.post("http://localhost:8000/api/v1/schedule/get", {}, {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
             });
 
-            if (res.data.success) {
-                const schedules = res.data.scheduleClasses;
+            if (scheduleRes.data.success) {
+                const schedules = scheduleRes.data.scheduleClasses;
                 const today = getCurrentDay();
                 const currentTime = getCurrentTimeInMinutes();
 
@@ -64,14 +89,85 @@ const Classes = () => {
                 const active = todaySchedules.filter(s => s.startTime <= currentTime && s.endTime >= currentTime);
                 const upcoming = todaySchedules.filter(s => s.startTime > currentTime);
 
-                setAllSchedules(schedules);
                 setActiveClasses(active);
                 setUpcomingClasses(upcoming);
-                setIsSetskeleton(false);
             }
         } catch (error) {
-            console.error("Error fetching schedule data", error);
-            setIsSetskeleton(false);
+            console.error("Error fetching schedule data for non-student:", error);
+            toast.error("Failed to fetch class data.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const fetchScheduleAndAttendanceData = async () => {
+        try {
+            setIsLoading(true);
+            const token = await getValidToken();
+
+            const scheduleRes = await axios.post("http://localhost:8000/api/v1/schedule/get", {}, {
+                headers: { Authorization: `Bearer ${token}` },
+                withCredentials: true,
+            });
+
+            if (scheduleRes.data.success) {
+                const schedules = scheduleRes.data.scheduleClasses;
+                const today = getCurrentDay();
+                const currentTime = getCurrentTimeInMinutes();
+
+                const todaySchedules = schedules.filter(s => s.day === today);
+                const active = todaySchedules.filter(s => s.startTime <= currentTime && s.endTime >= currentTime);
+                const upcoming = todaySchedules.filter(s => s.startTime > currentTime);
+
+                setActiveClasses(active);
+                setUpcomingClasses(upcoming);
+
+                if (isStudent) {
+                    const attendanceChecks = active.map(async (cls) => {
+                        try {
+                            const attendanceStatusRes = await axios.get(
+                                `http://localhost:8000/api/v1/attendance/is-marked?scheduleSlot=${cls._id}`,
+                                {
+                                    headers: { Authorization: `Bearer ${token}` },
+                                    withCredentials: true,
+                                }
+                            );
+                            return { scheduleSlotId: cls._id, isMarked: attendanceStatusRes.data.isMarked };
+                        } catch (error) {
+                            console.error(`Error checking attendance for ${cls._id}:`, error);
+                            return { scheduleSlotId: cls._id, isMarked: false };
+                        }
+                    });
+                    const results = await Promise.all(attendanceChecks);
+                    const markedMap = results.reduce((acc, curr) => {
+                        acc[curr.scheduleSlotId] = curr.isMarked;
+                        return acc;
+                    }, {});
+                    setMarkedAttendances(markedMap);
+                }
+
+                const cancelledClassesRes = await axios.get(
+                    "http://localhost:8000/api/v1/cancelled-classes/today",
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                        withCredentials: true,
+                    }
+                );
+                if (cancelledClassesRes.data.success) {
+                    const cancelledMap = cancelledClassesRes.data.data.reduce((acc, curr) => {
+                        if (curr.scheduleSlot && curr.scheduleSlot._id) {
+                            acc[curr.scheduleSlot._id] = true;
+                        }
+                        return acc;
+                    }, {});
+                    setCancelledClasses(cancelledMap);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            toast.error("Failed to fetch class data.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -84,6 +180,11 @@ const Classes = () => {
     };
 
     const markAttendance = async (e) => {
+        if (!isStudent) {
+            toast.error("Only students can mark attendance.");
+            return;
+        }
+
         try {
             const token = await getValidToken();
             const response = await axios.post(
@@ -98,25 +199,62 @@ const Classes = () => {
                 }
             );
             toast.success(response.data.message);
+            setMarkedAttendances(prev => ({ ...prev, [e._id]: true }));
         } catch (error) {
             if (error.response && error.response.data && error.response.data.message) {
-                toast.error(error.response.data.message); // Shows toast for duplicate or other errors
+                toast.error(error.response.data.message);
+                if (error.response.data.message === "Attendance already marked.") {
+                    setMarkedAttendances(prev => ({ ...prev, [e._id]: true }));
+                }
             } else {
                 toast.error("Something went wrong");
             }
             console.error("Error marking attendance", error);
         }
     };
-    
+
+    // New function to fetch students present in a class
+    const fetchPresentStudents = async (scheduleSlotId, subjectName, startTime, endTime) => {
+        setIsFetchingStudents(true);
+        setDialogClassInfo({ subjectName, startTime, endTime });
+        try {
+            const token = await getValidToken();
+            const today = new Date();
+            const todayDateString = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD for the backend query
+
+            const response = await axios.get(
+                `http://localhost:8000/api/v1/attendance/present-students?scheduleSlotId=${scheduleSlotId}&date=${todayDateString}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                }
+            );
+
+            if (response.data.success) {
+                setDialogStudents(response.data.data);
+                setIsDialogOpen(true); // Open the dialog after fetching data
+            } else {
+                toast.error(response.data.message || "Failed to fetch student list.");
+            }
+        } catch (error) {
+            console.error("Error fetching present students:", error);
+            toast.error("Failed to fetch student list.");
+        } finally {
+            setIsFetchingStudents(false);
+        }
+    };
 
     const currentTime = getCurrentTimeInMinutes();
 
     const renderCard = (e, type) => {
-        if (!e || !e.subject) return null; // ✅ Fix: Prevents null error
+        if (!e || !e.subject) return null;
 
         const endTimeFormatted = formatMinutesToTime(e.endTime);
         const startTimeFormatted = formatMinutesToTime(e.startTime);
         const duration = e.endTime - currentTime;
+
+        const isAttendanceMarked = markedAttendances[e._id];
+        const isClassCancelled = cancelledClasses[e._id];
 
         return (
             <div key={e._id} className="w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)]">
@@ -138,7 +276,8 @@ const Classes = () => {
                             </span>
                         </div>
                         <div className='flex justify-between items-center pr-5' >
-                            <div><h3 className="text-md text-[var(--white-8)]">Teacher: {e.subject.teacher}</h3>
+                            <div>
+                                <h3 className="text-md text-[var(--white-8)]">Teacher: {e.subject.teacher}</h3>
                                 <div className="text-xs mb-1">
                                     {type === "active" ? (
                                         <p className="w-fit px-2 py-0.5 bg-orange-200 rounded-sm text-[var(--black)]">
@@ -149,16 +288,42 @@ const Classes = () => {
                                             Starts at <b>{startTimeFormatted}</b>
                                         </p>
                                     )}
-                                </div></div>
-                            <button onClick={() => markAttendance(e)} className="text-xs py-1.5 text-white px-3 rounded-md bg-green-600 hover:bg-green-800 cursor-pointer " >Attendance</button>
+                                </div>
+                            </div>
+                            {isStudent && type === "active" ? (
+                                isClassCancelled ? (
+                                    <span className="text-xs py-1.5 text-white px-3 rounded-md bg-red-600">Cancelled</span>
+                                ) : isAttendanceMarked ? (
+                                    <span className="text-xs py-1.5 text-white px-3 rounded-md bg-blue-600">Present</span>
+                                ) : (
+                                    <button
+                                        onClick={() => markAttendance(e)}
+                                        className="text-xs py-1.5 text-white px-3 rounded-md bg-green-600 hover:bg-green-800 cursor-pointer"
+                                    >
+                                        Attendance
+                                    </button>
+                                )
+                            ) : (
+                                type === "active" && user?.role === "teacher" && (
+                                    <Button
+                                        onClick={() => fetchPresentStudents(e._id, e.subject.subject, startTimeFormatted, endTimeFormatted)}
+                                        className="text-xs py-1.5 px-3 bg-gray-600 hover:bg-gray-700 cursor-pointer"
+                                        disabled={isFetchingStudents}
+                                    >
+                                        {isFetchingStudents && dialogClassInfo?.subjectName === e.subject.subject ? (
+                                            <CircularLoader size="14" />
+                                        ) : (
+                                            "View Details"
+                                        )}
+                                    </Button>
+                                )
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
         );
     };
-    
-
 
     return (
         <div className='px-[2.5%] py-[1.5%] min-h-[calc(100vh-40px)] bg-[var(--bg)]'>
@@ -167,34 +332,56 @@ const Classes = () => {
                 <span className='flex items-center gap-1 text-xs text-stone-400'><User size="14" />Total: {activeClasses.length + upcomingClasses.length}</span>
             </div>
 
-            <h2 className='text-green-400 text-xl font-bold mt-4'>Active Classes</h2>
-            {isSkeleton && (
+            {isLoading ? (
+                <CircularLoader />
+            ) : (
                 <>
-                    <ActiveClassesCard />
-                    <ActiveClassesCard />
+                    <h2 className='text-green-400 text-xl font-bold mt-4'>Active Classes</h2>
+                    {activeClasses.length > 0 ? (
+                        activeClasses.map(e => renderCard(e, "active"))
+                    ) : (
+                        <p className="text-stone-400 text-sm mt-2">No active classes right now.</p>
+                    )}
+
+                    <h2 className='text-teal-400 text-xl font-bold mt-8 mb-3'>Upcoming Classes</h2>
+                    {upcomingClasses.length > 0 ? (
+                        upcomingClasses.map(e => renderCard(e, "upcoming"))
+                    ) : (
+                        <p className="text-stone-400 text-sm mt-2">No upcoming classes for today.</p>
+                    )}
                 </>
             )}
-            {activeClasses.length > 0 ? (
-                activeClasses.map(e => renderCard(e, "active"))
-            ) : (
-                !isSkeleton && <p className="text-stone-400 text-sm mt-2">No active classes right now.</p>
-            )}
 
-            <h2 className='text-teal-400 text-xl font-bold mt-8 mb-3'>Upcoming Classes</h2>
-            {isSkeleton && (
-                <>
-                    <ActiveClassesCard />
-                    <ActiveClassesCard />
-                    <ActiveClassesCard />
-                    <ActiveClassesCard />
-                </>
-            )}
-            {upcomingClasses.length > 0 ? (
-                upcomingClasses.map(e => renderCard(e, "upcoming"))
-            ) : (
-                !isSkeleton && <p className="text-stone-400 text-sm mt-2">No upcoming classes for today.</p>
-            )}
-
+            {/* Shadcn Dialog for displaying present students */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Students Present in {dialogClassInfo?.subjectName}</DialogTitle>
+                        <DialogDescription>
+                            Class Time: {dialogClassInfo?.startTime} - {dialogClassInfo?.endTime}
+                        </DialogDescription>
+                    </DialogHeader>
+                    {isFetchingStudents ? (
+                        <div className="flex justify-center items-center h-24">
+                            <CircularLoader />
+                            <p className="ml-2 text-gray-500">Fetching student list...</p>
+                        </div>
+                    ) : dialogStudents.length > 0 ? (
+                        <ul className="list-disc pl-5 max-h-60 overflow-y-auto">
+                            {dialogStudents.map(student => (
+                                <li key={student._id} className="mb-1 text-gray-800">
+                                    <span className="font-semibold">{student.fullName}</span> ({student.email})
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-gray-600 italic">No students marked present for this class yet today.</p>
+                    )}
+                    <DialogFooter>
+                        <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

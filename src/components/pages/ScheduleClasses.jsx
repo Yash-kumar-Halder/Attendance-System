@@ -79,7 +79,7 @@ const UpcomingClasses = () => {
         try {
             const token = await getValidToken();
             const response = await axios.post(
-                `http://localhost:8000/api/v1/classes/cancel-class`,
+                `http://localhost:8000/api/v1/classes/cancel-classes`,
                 {
                     scheduleSlotId: data.scheduleSlotId,
                     date: data.date,
@@ -138,16 +138,16 @@ const UpcomingClasses = () => {
                             <span className="bg-[var(--white-4)]  h-fit text-center content-center px-3 py-0.5 text-xs rounded-full text-[var(--white-7)]">
                                 {e.code}
                             </span>
-                            {!e.isCancelled && (
-                                        <button
-                                            onClick={() => {
-                                                setCancelledScheduleDialog(true);
-                                                setCancelItem(e);
-                                            }}
-                                            className="text-teal-700 rounded-md border border-orange-200 hover:bg-red-500 hover:text-white cursor-pointer text-xs px-2 "
-                                        >
-                                            Cancel Class
-                                        </button>
+                            {!e.isCancelled && user.role === "teacher" && (
+                                <button
+                                    onClick={() => {
+                                        setCancelledScheduleDialog(true);
+                                        setCancelItem(e);
+                                    }}
+                                    className="text-red-500 rounded-md border border-red-500 hover:bg-red-500 hover:text-white cursor-pointer text-xs px-2 "
+                                >
+                                    Cancel Class
+                                </button>
                             )}
                         </div>
                     </div>

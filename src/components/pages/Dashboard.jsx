@@ -4,17 +4,21 @@ import Chart from '../MyComponents/Chart'
 import BG1 from "../../assets/Images/bg-1.jpeg";
 import BG3 from "../../assets/Images/bg-3.jpeg";
 import ChartLine1 from "../../assets/Images/chart-line-1.jpeg";
+import { useAppSelector } from '@/hooks';
 
 const Dashboard = () => {
+
+    const { attendance, totalClasses } = useAppSelector(state => state.attendance);
+
   return (
       <div className='w-[100%] px-[2.5%] py-[1.5%] flex flex-wrap gap-[2%] bg-[var(--bg)]  ' >
           <div className='w-[55%] cursor-pointer transition duration-300 hover:scale-[1.03] overflow-hidden aspect-[3/1.65] bg-[var(--card)] rounded-md my-[1.5%]  ' >
               <CircleProgressBar
-                  value={75}
+                  total={totalClasses.totalTaken}
+                  present={attendance.length}
                   color="text-green-500"
                   baseColor="text-orange-400"
-                  label="Present"
-              />
+                  label="Present" />
 
           </div>
           <div className='w-[40%]  flex flex-wrap gap-[4%] justify-between aspect-[3/1.8] rounded-md my-[1.5%]  ' >

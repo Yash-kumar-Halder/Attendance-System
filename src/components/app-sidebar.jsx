@@ -17,7 +17,8 @@ import {
     ChartColumnBig,
     GraduationCap,
     History,
-    Shapes
+    Shapes,
+    ChartPie
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../hooks/index.js";
 import { NavLink } from "react-router-dom";
@@ -28,7 +29,7 @@ export function AppSidebar() {
 
     const teacherMenu = [
         { name: "Dashboard", icon: <LayoutDashboard size={18} />, link: "/dashboard" },
-        { name: "LeaderBoard", icon: <ChartColumnBig size={18} />, link: "/leaderboard" },
+        // { name: "LeaderBoard", icon: <ChartColumnBig size={18} />, link: "/leaderboard" },
         { name: "Active Classes", icon: <Radiation size={18} />, link: "/classes" },
         { name: "Upcomming Classes", icon: <CalendarCheck2 size={18} />, link: "/schedule-classes" },
         { name: "Hisory", icon: <History size={18} />, link: "/class-history" },
@@ -42,6 +43,7 @@ export function AppSidebar() {
         { name: "Shedule Classes", icon: <CalendarCheck2 size={18} />, link: "/schedule-classes" },
         { name: "Subjects", icon: <NotebookTabs size={18} />, link: "/add-subject" },
         { name: "Hisory", icon: <History size={18} />, link: "/class-history" },
+        { name: "Attendance", icon: <ChartPie size={18} />, link: "/attendance" },
     ];
 
     const sidebarItems = user.role === "teacher" ? teacherMenu : studentMenu;

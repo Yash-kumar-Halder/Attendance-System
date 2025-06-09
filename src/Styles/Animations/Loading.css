@@ -1,0 +1,32 @@
+.circular-loader-container {
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center;    /* Center vertically */
+    /* You can add more styling here for positioning on the page */
+  }
+  
+  @keyframes circular-rotate {
+    0% {
+      transform: rotate(0deg);
+      stroke-dashoffset: calc(2 * 3.14159 * (var(--loader-radius)) * 0.75);
+    }
+    100% {
+      transform: rotate(360deg);
+      stroke-dashoffset: calc(2 * 3.14159 * (var(--loader-radius)) * 2.75);
+    }
+  }
+  
+  :root {
+    --loader-stroke-width: 8px; /* Default stroke width */
+    --loader-size: 60px;        /* Default size */
+    --loader-radius: calc(var(--loader-size) / 2 - var(--loader-stroke-width) / 2);
+  }
+  
+  .circular-loader-container svg circle {
+    stroke-dasharray: calc(2 * 3.14159 * var(--loader-radius));
+    stroke-dashoffset: calc(2 * 3.14159 * var(--loader-radius) * 0.75);
+    stroke-linecap: round;
+    fill: transparent;
+    animation: circular-rotate 1.5s linear infinite;
+    transition: stroke-dashoffset 0.3s ease; /* Optional smooth transition */
+  }

@@ -98,9 +98,21 @@ const ClassHistory = () => {
                                 </p>
                             </div>
                         </div>
-                        <button className="text-xs py-1.5 text-white px-3 rounded-md bg-green-600 hover:bg-green-800 cursor-pointer">
-                            {e.isCancelled ? "7" : "Attend"}
-                        </button>
+
+                        {user.role === "teacher" ? (
+                            <button className="text-xs py-1.5 text-white px-3 rounded-md bg-green-600 hover:bg-green-800 cursor-pointer">
+                                {e.isCancelled ? "Cancelled" : "Attend"}
+                            </button>
+                        ) : (
+                            <span className={`text-xs font-bold px-3 py-1 rounded-md ${e.isCancelled
+                                ? "bg-gray-500 text-white"
+                                : e.isPresent
+                                    ? "bg-green-500 text-white"
+                                    : "bg-red-500 text-white"
+                                }`}>
+                                {e.isCancelled ? "Cancelled" : e.isPresent ? "Present" : "Absent"}
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
@@ -115,7 +127,7 @@ const ClassHistory = () => {
             {user.role === "teacher" && (
                 <div className="filter-container rounded-sm w-full flex items-center gap-3">
                     <Select onValueChange={(value) => setFilters(prev => ({ ...prev, day: value }))}>
-                        <SelectTrigger className="w-[120px]  h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
+                        <SelectTrigger className="w-[120px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Day" />
                         </SelectTrigger>
                         <SelectContent className="bg-[var(--white-1)] text-stone-400">
@@ -125,7 +137,7 @@ const ClassHistory = () => {
                         </SelectContent>
                     </Select>
                     <Select onValueChange={(value) => setFilters(prev => ({ ...prev, dept: value }))}>
-                        <SelectTrigger className="w-[80px]  h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
+                        <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Dept" />
                         </SelectTrigger>
                         <SelectContent className="bg-[var(--white-1)] text-stone-400">
@@ -135,7 +147,7 @@ const ClassHistory = () => {
                         </SelectContent>
                     </Select>
                     <Select onValueChange={(value) => setFilters(prev => ({ ...prev, sem: value }))}>
-                        <SelectTrigger className="w-[80px]  h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm.">
+                        <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Sem" />
                         </SelectTrigger>
                         <SelectContent className="bg-[var(--white-1)] text-stone-400">
@@ -145,7 +157,7 @@ const ClassHistory = () => {
                         </SelectContent>
                     </Select>
                     <Select onValueChange={(value) => setFilters(prev => ({ ...prev, subject: value }))}>
-                        <SelectTrigger className="w-[80px]  h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
+                        <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Subject" />
                         </SelectTrigger>
                         <SelectContent className="bg-[var(--white-1)] text-stone-400">
@@ -157,7 +169,7 @@ const ClassHistory = () => {
                         </SelectContent>
                     </Select>
                     <Select onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
-                        <SelectTrigger className="w-[80px]  h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
+                        <SelectTrigger className="w-[80px] h-6 rounded-[4px] bg-[var(--white-2)] border text-stone-400 text-sm">
                             <SelectValue placeholder="Type" />
                         </SelectTrigger>
                         <SelectContent className="bg-[var(--white-1)] text-stone-400">

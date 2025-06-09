@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const CircleProgressBar = ({
-    value = 70,
+    total = null,
+    present = null,
     color = 'text-orange-500',
     baseColor = 'text-gray-300',
     label = 'Present',
@@ -9,42 +10,55 @@ const CircleProgressBar = ({
     const progressRef = useRef(null);
     const radius = 16;
     const circumference = 2 * Math.PI * radius;
-    const duration = 700;
+    const duration = 500;
+
+    const targetValue = total > 0 ? Math.round((present / total) * 100) : 0;
+
+    const [animatedValue, setAnimatedValue] = useState(0);
+    const [animatedTotal, setAnimatedTotal] = useState(0);
+    const [animatedPresent, setAnimatedPresent] = useState(0);
+
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
     useEffect(() => {
         const circle = progressRef.current;
-        if (!circle) return;
+        if (!circle || !total || !present) return;
 
-        const targetOffset = circumference * (1 - value / 100);
+        const targetOffset = circumference * (1 - targetValue / 100);
         const initialOffset = parseFloat(circle.style.strokeDashoffset) || circumference;
-        const diff = targetOffset - initialOffset;
+        const offsetDiff = targetOffset - initialOffset;
 
         let start = null;
 
         const animate = (timestamp) => {
             if (!start) start = timestamp;
-            const progress = Math.min((timestamp - start) / duration, 1);
-            circle.style.strokeDashoffset = initialOffset + diff * progress;
+            const elapsed = timestamp - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = easeOutCubic(progress);
+
+            // Animate circle
+            circle.style.strokeDashoffset = initialOffset + offsetDiff * eased;
+
+            // Animate numbers
+            setAnimatedValue(Math.round(targetValue * eased));
+            setAnimatedTotal(Math.round(total * eased));
+            setAnimatedPresent(Math.round(present * eased));
 
             if (progress < 1) requestAnimationFrame(animate);
         };
 
         circle.style.strokeDasharray = `${circumference} ${circumference}`;
-        if (!circle.style.strokeDashoffset) {
-            circle.style.strokeDashoffset = circumference;
-        }
+        circle.style.strokeDashoffset = initialOffset;
 
         requestAnimationFrame(animate);
-    }, [value]);
-      
+    }, [targetValue, total, present, circumference]);
 
     return (
-        <div className="w-full h-full flex gap-[8%] items-center justify-center px-2 py-2 ">
-            <div className='flex flex-col items-center justify-center' >
+        <div className="w-full h-full flex gap-[8%] items-center justify-center px-2 py-2">
+            <div className="flex flex-col items-center justify-center">
                 <div className="text-xl font-semibold text-[var(--white-7)] mb-2">Attendance</div>
                 <div className="relative w-40 h-40">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                        {/* Base Circle - full ring */}
                         <circle
                             className={baseColor}
                             stroke="currentColor"
@@ -54,7 +68,6 @@ const CircleProgressBar = ({
                             cx="18"
                             cy="18"
                         />
-                        {/* Progress Circle - overlay on top */}
                         <circle
                             ref={progressRef}
                             className={color}
@@ -67,21 +80,19 @@ const CircleProgressBar = ({
                             style={{
                                 strokeDasharray: `${circumference} ${circumference}`,
                                 strokeDashoffset: circumference,
-                                transition: 'stroke-dashoffset 1s ease-in-out',
+                                transition: 'stroke-dashoffset 0.3s ease-out',
                             }}
                         />
                     </svg>
-
-                    {/* Center Text */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <p className={`text-lg font-bold ${color}`}>{value}%</p>
+                        <p className={`text-lg font-bold ${color}`}>{animatedValue}%</p>
                         <p className="text-xs text-gray-400">{label}</p>
                     </div>
                 </div>
             </div>
-            <div className='min-h-[50%] flex flex-col items-center justify-center text-xl font-bold pl-8 border-l border-gray-300' >
-                <p className='text-teal-400' >Total - 80</p>
-                <p className='text-green-400'>Present - 60</p>
+            <div className="min-h-[50%] flex flex-col items-center justify-center text-xl font-bold pl-8 border-l border-gray-300">
+                <p className="text-teal-400">Total : {total === null ? '0' : animatedTotal}</p>
+                <p className="text-green-400">Present : {present === null ? '0' : animatedPresent}</p>
             </div>
         </div>
     );

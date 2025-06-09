@@ -6,6 +6,8 @@ const initialState = {
 	email: null,
 	regNo: null,
 	role: "",
+	department: "",
+	semester: "",
 	accessToken: null,
 	isAuthenticated: false,
 	loading: false,
@@ -21,6 +23,8 @@ export const userSlice = createSlice({
 			state.email = action.payload.email;
 			state.regNo = action.payload.regNo;
 			state.role = action.payload.role || "user";
+			state.department = action.payload.department;
+			state.semester = action.payload.semester;
 			state.accessToken = action.payload.accessToken;
 			state.isAuthenticated = true;
 			state.loading = false;
@@ -34,6 +38,8 @@ export const userSlice = createSlice({
 			state.email = null;
 			state.regNo = null;
 			state.role = "";
+			state.department = null;
+			state.semester = null;
 			state.accessToken = null;
 			state.isAuthenticated = false;
 			state.loading = false;
