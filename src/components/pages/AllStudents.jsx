@@ -3,17 +3,21 @@ import { Coffee, Ellipsis, GraduationCap, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Import CircularLoader
 import { toast } from 'sonner'; // Assuming you have sonner for toasts
+import { useTeacherRoute } from '@/Utils/authRoute.js';
+
 
 const AllStudents = () => {
+    useTeacherRoute();
     const [allStudents, setAllStudents] = useState([]);
     const [isLoading, setIsLoading] = useState(true); // New state for loading
     const [visibleStudentCount, setVisibleStudentCount] = useState(0); // New state for staggered rendering
+
 
     const getValidToken = async () => {
         let token = localStorage.getItem("accessToken");
         try {
             // Try a dummy request to check token validity
-            await axios.get("http://localhost:8000/api/v1/subject/get", {
+            await axios.get("/subject/get", {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
             });
@@ -23,7 +27,7 @@ const AllStudents = () => {
                 // Refresh token
                 try {
                     const refreshResponse = await axios.get(
-                        "http://localhost:8000/api/v1/auth/refresh-token",
+                        "/auth/refresh-token",
                         { withCredentials: true }
                     );
                     const newToken = refreshResponse.data.accessToken;
@@ -42,7 +46,7 @@ const AllStudents = () => {
         try {
             setIsLoading(true); // Set loading to true before fetching
             const token = await getValidToken();
-            const response = await axios.post("http://localhost:8000/api/v1/user/get-students", {}, {
+            const response = await axios.post("/user/get-students", {}, {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
             });

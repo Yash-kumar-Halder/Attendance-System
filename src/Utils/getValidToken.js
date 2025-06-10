@@ -1,10 +1,11 @@
 import axios from "axios";
+// axios.defaults.baseURL = "http://localhost:8000/api/v1";
 
 export const getValidToken = async () => {
 	let token = localStorage.getItem("accessToken");
 	try {
 		// Try a dummy request to check token validity
-		await axios.get("http://localhost:8000/api/v1/subject/get", {
+		await axios.get("/subject/get", {
 			headers: { Authorization: `Bearer ${token}` },
 			withCredentials: true,
 		});
@@ -14,7 +15,7 @@ export const getValidToken = async () => {
 			// Refresh token
 			try {
 				const refreshResponse = await axios.get(
-					"http://localhost:8000/api/v1/auth/refresh-token",
+					"/auth/refresh-token",
 					{ withCredentials: true }
 				);
 				const newToken = refreshResponse.data.accessToken;

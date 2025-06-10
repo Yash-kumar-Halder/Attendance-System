@@ -1,29 +1,30 @@
 .morphing-loader {
-  animation: rotate 1.5s linear infinite;
-  transform-origin: center;
+	animation: rotate 1.5s linear infinite;
+	transform-origin: center;
 }
 
 .morphing-loader circle {
-  stroke-dasharray: 12 60 12 60 12 60; /* dot-like segments */
-  stroke-dashoffset: 0;
-  animation: morphDash 2s ease-in-out infinite;
+	stroke-dasharray: 10 40 10 40 10 40; /* dot-like segments */
+	stroke-dashoffset: 0;
+	animation: morphDash 2s ease-in-out infinite;
 }
 
 /* Rotation */
 @keyframes rotate {
-  100% {
-    transform: rotate(360deg);
-  }
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 /* Dash array morph: Segments ↔ Dots */
 @keyframes morphDash {
-  0%, 100% {
-    stroke-dasharray: 60 10;
-    stroke-dashoffset: 0;
-  }
-  50% {
-    stroke-dasharray: 12 60 12 60 12 60;
-    stroke-dashoffset: 30;
-  }
+	0%,
+	100% {
+		stroke-dasharray: 40 10;
+		stroke-dashoffset: 0;
+	}
+	50% {
+		stroke-dasharray: 10 40 10 40 10 40;
+		stroke-dashoffset: 30;
+	}
 }

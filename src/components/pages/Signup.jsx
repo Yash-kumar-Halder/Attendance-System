@@ -25,7 +25,7 @@ const Signup = () => {
         email: "",
         password: "",
         phoneNo : "",
-        role: "student",
+        role: "teacher",
         department: "",
         semester: "",
         regNo: "",
@@ -89,27 +89,40 @@ const Signup = () => {
 
     const signupHandler = async (e) => {
         e.preventDefault();
-
-        const validation = validateForm();
-        if (!validation.success) {
-            toast.error(validation.error);
-            return;
-        }
+        console.log(data)
 
         try {
-            const response = await registerUser(data);
+            const response = await axios.post("/auth/register", data, {
+                withCredentials: true,
+            });
 
-            if (response.success) {
-                dispatch(loginSuccess(response.user)); // use loginSuccess instead of setUser
-                localStorage.setItem("accessToken", response.accessToken);
-                toast.success(`Welcome ${response.user.name}`);
+            const user = response.data.user;
+            const accessToken = response.data.accessToken;
+
+            if (response.data.success) {
+                dispatch(
+                    loginSuccess({
+                        name: user.name,
+                        email: user.email,
+                        regNo: user.regNo,
+                        role: user.role,
+                        department: user.department,
+                        semester: user.semester,
+                        accessToken: response.data.accessToken,
+                    })
+                );
+
+                localStorage.setItem("accessToken", accessToken);
+
                 navigate("/dashboard");
+                toast.success(`Welcome back, ${user.name}`);
             } else {
-                toast.error(response.message || "Signup failed");
+                throw new Error("Invalid response from server."); // Throws error for unexpected response
             }
         } catch (error) {
-            toast.error(error?.response?.data?.message || "Something went wrong");
-            console.error("Signup error:", error);
+            const toastMsg = error.response.data.message;
+            toast.error(toastMsg);
+            console.error("Login failed:", error); // Logs error to console
         }
     };
 
@@ -183,22 +196,21 @@ const Signup = () => {
                             required
                         />
                     </div>
-                    <div className="mb-4 w-full flex items-end gap-3">
-                        <div>
-                            <Select onValueChange={(e) => handleSelectChange("department",e)} >
-                                <SelectTrigger className="w-[180px] h-10 rounded-[4px] py-[20px] border border-stone-400 text-[var(--white-8)] placeholder:text-stone-100">
-                                    <SelectValue placeholder="Department" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-[#111] text-stone-300">
-                                    <SelectItem value="CST">CST</SelectItem>
-                                    <SelectItem value="CFS">CFS</SelectItem>
-                                    <SelectItem value="EE">EE</SelectItem>
-                                    <SelectItem value="ID">ID</SelectItem>
-                                    <SelectItem value="MTR">MTR</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <Select onValueChange={(e) => handleSelectChange("semester",e)}>
+                    {data.role !== "teacher" && (
+                         <div className="mb-4 w-full flex items-end gap-3">
+                        <Select onValueChange={(e) => handleSelectChange("department", e)} >
+                            <SelectTrigger className="w-[180px] h-10 rounded-[4px] py-[20px] border border-stone-400 text-[var(--white-8)] placeholder:text-stone-100">
+                                <SelectValue placeholder="Department" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#111] text-stone-300">
+                                <SelectItem value="CST">CST</SelectItem>
+                                <SelectItem value="CFS">CFS</SelectItem>
+                                <SelectItem value="EE">EE</SelectItem>
+                                <SelectItem value="ID">ID</SelectItem>
+                                <SelectItem value="MTR">MTR</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select onValueChange={(e) => handleSelectChange("semester", e)}>
                             <SelectTrigger className="w-[180px] h-10 rounded-[4px] py-[20px] border border-stone-400 text-[var(--white-8)] placeholder:text-stone-100 ">
                                 <SelectValue placeholder="Semester" />
                             </SelectTrigger>
@@ -212,17 +224,19 @@ const Signup = () => {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="mb-4 w-full">
+                    )}
+                    {data.role !== "teacher" && (<div className="mb-4 w-full">
                         <label className="w-full text-sm font-medium text-[var(--white-7)] mb-2" htmlFor="email">Registration number</label>
-                            <input
-                                name="regNo"
-                                onChange={handleChange}
+                        <input
+                            name="regNo"
+                            onChange={handleChange}
                             value={data.regNo}
-                                type="text"
-                                id="regNo"
+                            type="text"
+                            id="regNo"
                             className="w-full px-3 py-2 border ring-stone-500 rounded focus:outline-none focus:ring focus:ring-none focus:border-amber-300/70 placeholder:text-stone-400 text-[var(--white-8)] active:bg-black "
-                            placeholder="Enter your registration number"/>
-                    </div>
+                            placeholder="Enter your registration number" />
+                    </div>)}
+                    
                     <button
                         type="submit"
                         className="w-fit px-8 py-2 text-white font-semibold rounded hover:bg-blue-700 transition duration-200 gradient-btn"

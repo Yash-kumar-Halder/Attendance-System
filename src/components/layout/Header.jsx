@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { logout } from '@/Redux/Slices/User/user';
 import { toggleTheme } from '@/Redux/Slices/User/theme';
 import { toast } from 'sonner';
+import axios from 'axios';
+import { getValidToken } from '@/Utils/getValidToken';
 
 
 const Header = () => {
@@ -48,6 +50,20 @@ const Header = () => {
         }
 
     ]
+
+    const logouthandler = () => {
+        try {
+            const token = getValidToken();
+            axios.post("/auth/logout", {}, {
+                headers: { Authorization: `Bearer ${token}` },
+                withCredentials: true,
+            })
+            navigate("/");
+            dispatch(logout());
+        } catch (error) {
+            console.error("Logout error: ", error);
+        }
+    }
 
     return (
         <div className='sticky w-full h-10 bg-[var(--header)] top-0  flex items-center justify-between px-8 text-[var(--text-primary)] z-10' >
@@ -96,8 +112,7 @@ const Header = () => {
                         {/* <NavLink to="/login" > */}
                             <button
                                 onClick={() => {
-                                dispatch(logout());
-                                    navigate("/");
+                                    logouthandler();
                                     toast.success("Logout successfully");
                                 }
                                 }

@@ -21,9 +21,11 @@ import {
     AlertDialogDescription,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Import CircularLoader
+import CircularLoader from '../MyComponents/CircularLoader.jsx'; 
+import { userAuthRoute } from '@/Utils/authRoute';
 
 const ClassHistory = () => {
+    userAuthRoute();
     const user = useAppSelector((state) => state.user);
     const [pastClasses, setPastClasses] = useState([]);
     const [subjects, setSubjects] = useState([]);
@@ -44,7 +46,7 @@ const ClassHistory = () => {
             setIsLoading(true); // Set loading to true before fetching
             const token = await getValidToken();
             const response = await axios.post(
-                "http://localhost:8000/api/v1/classes/history",
+                "/classes/history",
                 {},
                 {
                     headers: { Authorization: `Bearer ${token}` },
@@ -65,15 +67,17 @@ const ClassHistory = () => {
 
     const fetchStudentsPresent = async (scheduleSlotId, date) => {
         try {
+            console.log(date)
             const token = await getValidToken();
             const response = await axios.get(
-                `http://localhost:8000/api/v1/attendance/present-students?scheduleSlotId=${scheduleSlotId}&date=${date}`,
+                `/attendance/present-students?scheduleSlotId=${scheduleSlotId}&date=${date}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                     withCredentials: true,
                 }
             );
             if (response.data.success) {
+                console.log(response.data)
                 setPresentStudents(response.data.data);
                 setAttendanceDetailDialog(true);
             } else {
@@ -138,38 +142,39 @@ const ClassHistory = () => {
         fetchClassHistory(); // Re-fetch all history to reset filters completely
     };
 
+
     const renderCard = (e, idx) => (
         <div key={idx} className="w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)] fade-in-card">
             <div className="flex justify-between items-start">
                 <div className="w-full">
                     <div className="flex items-center justify-between pr-5 w-full">
-                        <h2 className="text-[var(--white-8)] text-lg flex items-center gap-1.5 font-extrabold">
+                        <h2 className="text-[var(--white-7)] text-lg flex items-center gap-2 font-extrabold">
                             {e.subject}
                             <NotebookPen size="15" />
-                            <span className="bg-emerald-300 text-stone-800 text-xs ml-3 px-3 rounded-2xl py-0.5">
+                            <span className="border-emerald-500 border text-emerald-700 text-xs ml-3 px-4 rounded-2xl py-0.5 mr-1">
                                 {e.department}
                             </span>
-                            <span className="bg-teal-200 text-stone-800 text-xs px-3 rounded-2xl py-0.5">
+                            <span className="border-fuchsia-600 border text-fuchsia-700 text-xs px-4 rounded-2xl py-0.5">
                                 {e.semester}
                             </span>
                         </h2>
                         <div className='flex gap-2'>
-                            <span className='text-xs bg-amber-100 h-fit px-1.5 rounded-full'>{e.day}</span>
-                            <span className='text-xs bg-amber-100 h-fit px-1.5 rounded-full'>{e.date}</span>
-                            <span className="bg-[var(--white-4)] px-2.5 py-0 text-xs rounded-2xl text-[var(--white-7)]">
+                            <span className='text-xs bg-[var(--yg-chips)] border border-[var(--yg-b-chips)] h-fit px-2.5 py-0.5 text-[var(--yg-t-chips)] rounded-full'>{e.day}</span>
+                            <span className='text-xs bg-[var(--p-chips)] py-0.5 h-fit px-2 border border-[var(--p-b-chips)] text-[var(--p-t-chips)] rounded-full'>{e.date}</span>
+                            <span className="bg-[var(--white-4)] px-4 py-0 text-xs text-center content-center rounded-2xl text-[var(--white-7)] border border-[var(--white-5)] ">
                                 {e.code}
                             </span>
                         </div>
                     </div>
                     <div className='flex justify-between items-center pr-5'>
                         <div>
-                            <h3 className="text-md text-[var(--white-8)]">Teacher: {e.teacher}</h3>
+                            <h3 className="text-md text-[var(--white-6)]">Teacher: {e.teacher}</h3>
                             <div className="text-xs flex gap-1.5 mb-1">
-                                <p className="w-fit px-2 py-0.5 bg-orange-100 rounded-sm text-[var(--black)]">
+                                <p className="w-fit px-2 py-0.5 bg-[var(--o-chips)] border border-[var(--o-b-chips)] rounded-sm text-[var(--o-t-chips)]">
                                     Start at <b>{Math.floor(e.startTime / 60)}:{(e.startTime % 60).toString().padStart(2, '0')}</b> —
                                     <b>{Math.floor(e.endTime / 60)}:{(e.endTime % 60).toString().padStart(2, '0')}</b>
                                 </p>
-                                <p className="w-fit px-2 py-0.5 bg-emerald-100 rounded-sm text-[var(--black)]">
+                                <p className="w-fit px-2 py-0.5 bg-[var(--b-chips)] rounded-sm text-[var(--white-7)] font-semibold border border-[var(--b-b-chips)] ">
                                     Duration <b>
                                         {Math.floor((e.endTime - e.startTime) / 60) > 0 && `${Math.floor((e.endTime - e.startTime) / 60)}h `}
                                         {(e.endTime - e.startTime) % 60 !== 0 && `${(e.endTime - e.startTime) % 60}m`}
@@ -184,7 +189,7 @@ const ClassHistory = () => {
                                     setCurrentClassForAttendance(e);
                                     fetchStudentsPresent(e.scheduleSlotId, e.date);
                                 }}
-                                className="text-xs py-1.5 text-white px-3 rounded-md bg-blue-600 hover:bg-blue-700 cursor-pointer flex items-center gap-1"
+                                className="text-xs py-1.5 text-white px-3 rounded-md bg-teal-800 hover:bg-blue-700 cursor-pointer flex items-center gap-1"
                             >
                                 <Eye size={12} /> View Details
                             </button>
@@ -204,6 +209,7 @@ const ClassHistory = () => {
         </div>
     );
 
+    
     return (
         <div className='w-[100%] px-[2.5%] py-[1.5%]'>
             <h1 className='text-xl text-[var(--white-8)] font-extrabold'>Class History</h1>
@@ -280,7 +286,7 @@ const ClassHistory = () => {
                         <p className="text-[var(--white-6)] text-sm">No class history found matching your criteria.</p>
                     )
                 )}
-
+                {/* {console.log( filteredClasses )} */}
                 {/* Attendance Details Dialog */}
                 <AlertDialog open={attendanceDetailDialog} onOpenChange={setAttendanceDetailDialog}>
                     <AlertDialogContent>
@@ -288,9 +294,9 @@ const ClassHistory = () => {
                             <AlertDialogTitle>Students Present in Class</AlertDialogTitle>
                             {currentClassForAttendance && (
                                 <AlertDialogDescription>
-                                    <p>Subject: <b>{currentClassForAttendance.subject}</b></p>
-                                    <p>Date: <b>{currentClassForAttendance.date}</b></p>
-                                    <p>Time: <b>{Math.floor(currentClassForAttendance.startTime / 60)}:{(currentClassForAttendance.startTime % 60).toString().padStart(2, '0')} - {Math.floor(currentClassForAttendance.endTime / 60)}:{(currentClassForAttendance.endTime % 60).toString().padStart(2, '0')}</b></p>
+                                    <span>Subject: <b>{currentClassForAttendance.subject}</b></span>
+                                    <span>Date: <b>{currentClassForAttendance.date}</b></span>
+                                    <span>Time: <b>{Math.floor(currentClassForAttendance.startTime / 60)}:{(currentClassForAttendance.startTime % 60).toString().padStart(2, '0')} - {Math.floor(currentClassForAttendance.endTime / 60)}:{(currentClassForAttendance.endTime % 60).toString().padStart(2, '0')}</b></span>
                                 </AlertDialogDescription>
                             )}
                         </AlertDialogHeader>

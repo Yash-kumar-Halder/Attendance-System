@@ -56,7 +56,7 @@ export function AppSidebar() {
                         <SidebarMenuButton className='hover:bg-transparent content-center py-0 flex items-center'>
                             <a href="#" className="flex h-6 gap-2 items-center text-[#ef50f5]">
                                 <Shapes className="stroke-[3]" size={20} />
-                                <h2 className="text-headline font-medium bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent tracking-wider text-nowrap uppercase">
+                                <h2 className="text-headline font-medium bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent tracking-wider uppercase w-[9rem] text-nowrap truncate ">
                                     {user.user}
                                 </h2>
                             </a>

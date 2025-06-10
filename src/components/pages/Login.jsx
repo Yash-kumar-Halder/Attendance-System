@@ -5,9 +5,8 @@ import { useAppSelector, useAppDispatch } from "../../hooks/index.js";
 import { loginSuccess } from "@/Redux/Slices/User/user.js";
 import { toast } from "sonner";
 import { Toaster } from "../ui/sonner.jsx";
-import { loginUser } from "@/Freatures/Auth/authService.js";
-const Login = () => {
 
+const Login = () => {
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
@@ -29,37 +28,39 @@ const Login = () => {
         e.preventDefault();
 
         try {
-            const responseData = await loginUser(data); // ✅ uses instance with baseURL & credentials
+            const response = await axios.post("/auth/login", { data }, {
+                withCredentials: true,
+            });
 
-            const { user, accessToken } = responseData;
+            const user = response.data.user;
+            const accessToken = response.data.accessToken;
 
-            if (user && accessToken) {
-                dispatch(
-                    loginSuccess({
-                        name: user.name,
-                        email: user.email,
-                        regNo: user.regNo,
-                        role: user.role,
-                        department: user.department,
-                        semester: user.semester,
-                        accessToken: accessToken,
-                    })
-                );
+            if(response.data.success) {
+                    dispatch(
+                        loginSuccess({
+                            name: user.name,
+                            email: user.email,
+                            regNo: user.regNo,
+                            role: user.role,
+                            department: user.department,
+                            semester: user.semester,
+                            accessToken: response.data.accessToken,
+                        })
+                    );
 
-                localStorage.setItem("accessToken", accessToken); // optional: useful for page refresh access
+                    localStorage.setItem("accessToken", accessToken);
 
-                navigate("/dashboard");
-                toast.success(`Welcome back, ${user.name}`);
+                    navigate("/dashboard");
+                    toast.success(`Welcome back, ${user.name}`);
             } else {
-                throw new Error("Invalid response from server.");
+                throw new Error("Invalid response from server."); // Throws error for unexpected response
             }
         } catch (error) {
-            const errorMsg =
-                error?.response?.data?.message || error.message || "Login failed";
-            toast.error(errorMsg);
-            console.error("Login failed:", errorMsg);
+            const toastMsg = error.response.data.message;
+            toast.error(toastMsg);
+            console.error("Login failed:", error); // Logs error to console
         }
-    };    
+    };
 
     return (
         <div className="flex items-center justify-center h-screen bg-[var(--bg)]">
@@ -105,4 +106,4 @@ const Login = () => {
     )
 }
 
-export default Login
+export default Login;

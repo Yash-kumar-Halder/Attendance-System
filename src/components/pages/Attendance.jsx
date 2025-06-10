@@ -4,8 +4,10 @@ import { getValidToken } from '@/Utils/getValidToken';
 import axios from 'axios';
 import { useAppDispatch } from '@/hooks';
 import { setData } from '@/Redux/Slices/User/attendance';
+import { userAuthRoute } from '@/Utils/authRoute';
 
 const Attendance = () => {
+  userAuthRoute();
   const [attendance, setAttendance] = useState([]);
   const [totalClasses, setTotalClasses] = useState([])
   
@@ -15,7 +17,7 @@ const Attendance = () => {
     try {
       const token = await getValidToken();
       const response = await axios.post(
-        "http://localhost:8000/api/v1/attendance/attendance",
+        "/attendance/attendance",
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -25,7 +27,7 @@ const Attendance = () => {
       const attendanceData = response.data.data;
       setAttendance(attendanceData);
       const totalClass = await axios.post(
-        "http://localhost:8000/api/v1/classes/total-class",
+        "/classes/total-class",
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

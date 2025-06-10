@@ -16,7 +16,7 @@ instance.interceptors.response.use(
 		if (err.response?.status === 401 && !originalRequest._retry) {
 			originalRequest._retry = true;
 			try {
-				const refreshRes = await axios.get("http://localhost:8000/api/v1/auth/refresh-token", {
+				const refreshRes = await axios.get("/auth/refresh-token", {
 					withCredentials: true,
 				});
 				const newAccessToken = refreshRes.data.accessToken;
@@ -28,7 +28,7 @@ instance.interceptors.response.use(
 				return instance(originalRequest);
 			} catch (refreshErr) {
 				store.dispatch(logout());
-				window.location.href = "/login";
+				// window.location.href = "/login";
 				return Promise.reject(refreshErr);
 			}
 		}

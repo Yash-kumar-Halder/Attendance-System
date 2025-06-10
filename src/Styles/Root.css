@@ -9,6 +9,7 @@
   --active-card: #ffffff;
   --card: #f8f8f8;
   --hilited-card: #ffffff;
+  --test: red;
 
 	--primary-color: #3498db;
 	--secondary-color: #2ecc71;
@@ -27,6 +28,23 @@
 	--white-7: #666666;
 	--white-8: #333333;
 	--white-9: #1a1a1a; /* Darkest */
+
+	/* Chips Color  */
+	--o-chips: rgb(255, 242, 218);
+	--o-b-chips: #b97900;
+	--o-t-chips: #774d00;
+	--b-chips: rgb(191, 191, 255);
+	--b-b-chips: rgb(128, 128, 255);
+	--yg-chips: #deffa9;
+	--yg-b-chips: #b3ff3a;
+	--yg-t-chips: #3d6300;
+
+	--p-chips: #ffdfe5;
+	--p-b-chips: #ff97a9;
+	--p-t-chips: #a34756;
+
+
+
 }
 
 [data-theme="dark"] {
@@ -54,4 +72,22 @@
 	--white-7: #aaaaaa;
 	--white-8: #dddddd;
 	--white-9: #f5f5f5; /* Lightest */
+
+
+	/* Chips Color  */
+	--o-chips: rgba(145, 94, 0, 0.144);
+	--o-b-chips: rgba(145, 94, 0, 0.548);
+	--o-t-chips: #cc8500;
+	--b-chips: rgba(0, 0, 255, 0.171);
+	--b-b-chips: rgba(0, 0, 255, 0.377);
+	--yg-chips: #9dff0015;
+	--yg-b-chips: #9dff0056;
+	--yg-t-chips: #6aac00;
+
+	--p-chips: #ff93a51f;
+	--p-b-chips: #ff607a42;
+	--p-t-chips: #ff6d85;
+
+	--test: rgb(0, 26, 255);
+
 }

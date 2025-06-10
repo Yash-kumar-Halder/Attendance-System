@@ -143,7 +143,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          "bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col",
+          "bg-sidebar borde text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col",
           className
         )}
         {...props}>
@@ -212,7 +212,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="bg-[var(--white-1)] group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm">
+          className="bg-[var(--white-1)] group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm border border-l-0 border-t-0 border-b-0 border-r-[var(--white-4)] ">
           {children}
         </div>
       </div>
@@ -281,7 +281,7 @@ function SidebarInset({
       data-slot="sidebar-inset"
       className={cn(
         "bg-background relative flex w-full flex-1 flex-col",
-        "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
+        "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 ",
         className
       )}
       {...props} />

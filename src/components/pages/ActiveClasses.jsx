@@ -7,9 +7,13 @@ import { Button } from '../ui/button.jsx';
 import { toast } from 'sonner';
 import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Correctly imported
 import { useAppSelector } from '@/hooks/index.js';
+import { userAuthRoute } from '@/Utils/authRoute.js';
+import { setLoading } from '@/Redux/Slices/User/user.js';
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog.jsx';
 
 const Classes = () => {
 
+    userAuthRoute();
     const user = useAppSelector(state => state.user);
     const isStudent = user?.role === "student";
 
@@ -18,8 +22,11 @@ const Classes = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [markedAttendances, setMarkedAttendances] = useState({});
     const [cancelledClasses, setCancelledClasses] = useState({});
+    const [attendanceData, setAttendanceData] = useState({});
+    const [presentStudents, setPresentStudents] = useState([]);
+    const [fetchPresentStudents, setFetchPresentStudents] = useState(false);
+    const [presentStudentsDialog, setPresentStudentsDialog] = useState(false);
 
-    // New state for staggered card animation
     const [visibleCardCount, setVisibleCardCount] = useState(0);
 
     useEffect(() => {
@@ -27,7 +34,6 @@ const Classes = () => {
             setIsLoading(true);
             setVisibleCardCount(0); // Reset visible count on new data fetch
 
-            // Fetch schedules and attendance/cancellations based on user role
             if (isStudent) {
                 await fetchScheduleAndAttendanceData();
             } else {
@@ -40,26 +46,31 @@ const Classes = () => {
         fetchData();
     }, [isStudent]); // Dependencies: re-run effect if isStudent changes
 
-    // Effect for staggered rendering of cards
+    /**
+     * Effect for staggered rendering of cards.
+     * Increments `visibleCardCount` over time to reveal cards one by one.
+     */
     useEffect(() => {
-        // If not loading and there are cards to show, and not all cards are visible yet
-        if (!isLoading && (activeClasses.length + upcomingClasses.length) > 0 && visibleCardCount < (activeClasses.length + upcomingClasses.length)) {
+        // Combine all classes into a single array for unified staggering logic
+        const allCombinedClasses = [...activeClasses, ...upcomingClasses];
+
+        // Only trigger if not loading, there are cards, and not all are visible yet
+        if (!isLoading && allCombinedClasses.length > 0 && visibleCardCount < allCombinedClasses.length) {
             const timer = setTimeout(() => {
                 setVisibleCardCount((prevCount) => prevCount + 1);
-            }, 100); // Adjust delay here for staggering
-            return () => clearTimeout(timer);
+            }, 100); // Adjust delay here (e.g., 100ms per card)
+            return () => clearTimeout(timer); // Cleanup on unmount or re-render
         }
-        // If loading starts or there are no cards, reset the count
-        if (isLoading || (activeClasses.length + upcomingClasses.length) === 0) {
+        // If loading or no cards, ensure visible count is 0 to reset animation
+        if (isLoading || allCombinedClasses.length === 0) {
             setVisibleCardCount(0);
         }
     }, [isLoading, visibleCardCount, activeClasses.length, upcomingClasses.length]);
 
-
     const getValidToken = async () => {
         let token = localStorage.getItem("accessToken");
         try {
-            await axios.get("http://localhost:8000/api/v1/subject/get", {
+            await axios.get("/subject/get", {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
             });
@@ -68,7 +79,7 @@ const Classes = () => {
             if (error.response?.status === 401 || error.response?.status === 403) {
                 try {
                     const refreshResponse = await axios.get(
-                        "http://localhost:8000/api/v1/auth/refresh-token",
+                        "/auth/refresh-token",
                         { withCredentials: true }
                     );
                     const newToken = refreshResponse.data.accessToken;
@@ -87,7 +98,7 @@ const Classes = () => {
         try {
             const token = await getValidToken();
 
-            const scheduleRes = await axios.post("http://localhost:8000/api/v1/schedule/get", {}, {
+            const scheduleRes = await axios.post("/schedule/get", {}, {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
             });
@@ -98,8 +109,16 @@ const Classes = () => {
                 const currentTime = getCurrentTimeInMinutes();
 
                 const todaySchedules = schedules.filter(s => s.day === today);
-                const active = todaySchedules.filter(s => s.startTime <= currentTime && s.endTime >= currentTime);
-                const upcoming = todaySchedules.filter(s => s.startTime > currentTime);
+
+                // Filter and sort active classes
+                const active = todaySchedules
+                    .filter(s => s.startTime <= currentTime && s.endTime >= currentTime)
+                    .sort((a, b) => a.startTime - b.startTime); // Sort by start time (ascending)
+
+                // Filter and sort upcoming classes
+                const upcoming = todaySchedules
+                    .filter(s => s.startTime > currentTime)
+                    .sort((a, b) => a.startTime - b.startTime); // Sort by start time (ascending)
 
                 setActiveClasses(active);
                 setUpcomingClasses(upcoming);
@@ -110,13 +129,12 @@ const Classes = () => {
         }
     };
 
-
     const fetchScheduleAndAttendanceData = async () => {
         try {
             const token = await getValidToken();
 
             // Fetch schedules
-            const scheduleRes = await axios.post("http://localhost:8000/api/v1/schedule/get", {}, {
+            const scheduleRes = await axios.post("/schedule/get", {}, {
                 headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true,
             });
@@ -127,8 +145,16 @@ const Classes = () => {
                 const currentTime = getCurrentTimeInMinutes();
 
                 const todaySchedules = schedules.filter(s => s.day === today);
-                const active = todaySchedules.filter(s => s.startTime <= currentTime && s.endTime >= currentTime);
-                const upcoming = todaySchedules.filter(s => s.startTime > currentTime);
+
+                // Filter and sort active classes
+                const active = todaySchedules
+                    .filter(s => s.startTime <= currentTime && s.endTime >= currentTime)
+                    .sort((a, b) => a.startTime - b.startTime); // Sort by start time (ascending)
+
+                // Filter and sort upcoming classes
+                const upcoming = todaySchedules
+                    .filter(s => s.startTime > currentTime)
+                    .sort((a, b) => a.startTime - b.startTime); // Sort by start time (ascending)
 
                 setActiveClasses(active);
                 setUpcomingClasses(upcoming);
@@ -138,7 +164,7 @@ const Classes = () => {
                     const attendanceChecks = active.map(async (cls) => {
                         try {
                             const attendanceStatusRes = await axios.get(
-                                `http://localhost:8000/api/v1/attendance/is-marked?scheduleSlot=${cls._id}`,
+                                `/attendance/is-marked?scheduleSlot=${cls._id}`,
                                 {
                                     headers: { Authorization: `Bearer ${token}` },
                                     withCredentials: true,
@@ -160,7 +186,7 @@ const Classes = () => {
 
                 // Fetch cancelled classes for today
                 const cancelledClassesRes = await axios.get(
-                    "http://localhost:8000/api/v1/classes/cancelled-classes/today",
+                    "/classes/cancelled-classes/today",
                     {
                         headers: { Authorization: `Bearer ${token}` },
                         withCredentials: true,
@@ -199,7 +225,7 @@ const Classes = () => {
         try {
             const token = await getValidToken();
             const response = await axios.post(
-                "http://localhost:8000/api/v1/attendance/mark",
+                "/attendance/mark",
                 {
                     subjectId: e.subject._id,
                     scheduleSlot: e._id,
@@ -224,12 +250,56 @@ const Classes = () => {
         }
     };
 
+    const fetchAttendanceForSchedule = async (scheduleId, dateString) => {
+        try {
+            const token = getValidToken();
+
+            let queryDate;
+            if (dateString) {
+                queryDate = dateString;
+            } else {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                queryDate = `${year}-${month}-${day}`;
+            }
+
+
+            const response = await axios.post('/attendance/present-subject', {
+                scheduleSlotId: scheduleId,
+                date: queryDate,
+            },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    withCredentials: true,
+                }
+            );
+
+            if (response.data) {
+                setPresentStudents(response.data);
+                setFetchPresentStudents(true);
+            }
+
+        } catch (err) {
+            // setError('Failed to fetch attendance data.'); // Uncomment for error handling
+            console.error('Error fetching attendance:', err);
+            // Add specific error handling or user feedback here
+        }
+        // finally {
+        //     setLoading(false); // Uncomment for loading state management
+        // }
+    };
+
+    const fetchSubjectDetails = (e) => {
+        const scheduleId = e._id;
+        const specificDate = "2025-06-09T18:30:00.000+00:00"; // IMPORTANT: Use 00:00:00.000Z to match your model's date storage
+        fetchAttendanceForSchedule(scheduleId, specificDate);
+    }
+
     const currentTime = getCurrentTimeInMinutes();
 
-    // Combine active and upcoming classes into a single array for easier mapping and staggering
-    const allClasses = [...activeClasses, ...upcomingClasses];
-
-    const renderCard = (e, type, index) => { // Added index for staggering
+    const renderCard = (e, type, index) => {
         if (!e || !e.subject) return null;
 
         const endTimeFormatted = formatMinutesToTime(e.endTime);
@@ -239,8 +309,8 @@ const Classes = () => {
         const isAttendanceMarked = markedAttendances[e._id];
         const isClassCancelled = cancelledClasses[e._id];
 
-        // Apply fade-in-card class conditionally based on visibleCardCount
-        const cardClassName = `w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)] fade-in-card`; // Add fade-in-card
+        // Apply fade-in-card class and style for animation delay
+        const cardClassName = `w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)] fade-in-card`;
 
         return (
             <div key={e._id} className={cardClassName} style={{ animationDelay: `${index * 50}ms` }}>
@@ -291,7 +361,10 @@ const Classes = () => {
                                 )
                             ) : (
                                 type === "active" && user?.role === "teacher" && (
-                                    <span className="text-xs py-1.5 text-white px-3 rounded-md bg-gray-600">View Details</span>
+                                        <span onClick={() => {
+                                            fetchSubjectDetails(e);
+                                            setPresentStudentsDialog(true);
+                                        }} className="text-xs py-1.5 text-white px-3 rounded-md bg-gray-600 cursor-pointer hover:bg-[var(--white-4)] active:scale-90 select-none ">View Details</span>
                                 )
                             )}
                         </div>
@@ -303,7 +376,7 @@ const Classes = () => {
 
     return (
         <div className='px-[2.5%] py-[1.5%] min-h-[calc(100vh-40px)] bg-[var(--bg)] flex flex-col items-center'>
-            <div className='w-full'> {/* Added a wrapper div for consistent layout */}
+            <div className='w-full'>
                 <h1 className='text-2xl font-extrabold text-[var(--white-9)]'>Classes</h1>
                 <span className='flex items-center gap-1 text-xs text-stone-400'><User size="14" />Total: {activeClasses.length + upcomingClasses.length}</span>
             </div>
@@ -311,10 +384,9 @@ const Classes = () => {
             {isLoading ? (
                 <CircularLoader />
             ) : (
-                <div className='w-full'> {/* This div holds the class lists, will become visible instantly after loading */}
+                <div className='w-full'>
                     <h2 className='text-green-400 text-xl font-bold mt-4'>Active Classes</h2>
                     {activeClasses.length > 0 ? (
-                        // Map over active classes, apply fade-in only to currently visible cards
                         activeClasses.slice(0, visibleCardCount).map((e, index) => renderCard(e, "active", index))
                     ) : (
                         <p className="text-stone-400 text-sm mt-2">No active classes right now.</p>
@@ -322,14 +394,32 @@ const Classes = () => {
 
                     <h2 className='text-teal-400 text-xl font-bold mt-8 mb-3'>Upcoming Classes</h2>
                     {upcomingClasses.length > 0 ? (
-                        // Map over upcoming classes, continue the staggering from where active classes left off
-                        upcomingClasses.slice(0, visibleCardCount - activeClasses.length > 0 ? visibleCardCount - activeClasses.length : 0)
-                            .map((e, index) => renderCard(e, "upcoming", index + activeClasses.length)) // Adjust index
+                        upcomingClasses.slice(0, Math.max(0, visibleCardCount - activeClasses.length))
+                            .map((e, index) => renderCard(e, "upcoming", index + activeClasses.length))
                     ) : (
                         <p className="text-stone-400 text-sm mt-2">No upcoming classes for today.</p>
                     )}
                 </div>
             )}
+            <AlertDialog open={presentStudentsDialog} onOpenChange={setPresentStudentsDialog}>
+                <AlertDialogContent className="bg-[#00000077] backdrop-blur-md border border-stone-800 " >
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-[#007da3] " >All student present in this class</AlertDialogTitle>
+                        <AlertDialogDescription>Some time it take some time to update.
+                        </AlertDialogDescription>
+                            <div className=' min-h-[100px] max-h-[220px] overflow-scroll border-t border-[#6f00ff2c] text-stone-400 pt-5 flex flex-col gap-2 ' >
+                            {presentStudents.map((e) => (
+                                <div className=' text-sm py-1 w-fit px-6 rounded-md border border-[#55007c86] bg-[#55007c4f] ' key={e.student._id}>
+                                    {e.student.name}
+                                </div>
+                            ))}
+                            </div>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-black text-stone-200 border-stone-700 cursor-pointer hover:bg-stone-900 hover:text-stone-200 active:scale-90" onClick={() => { setPresentStudentsDialog(false) }} >Cancel</AlertDialogCancel>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

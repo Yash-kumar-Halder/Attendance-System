@@ -54,14 +54,15 @@
 /* In your globals.css or equivalent */
 /* In UpcomingClasses.module.css */
 
-.fadeIn {
+/* .fadeIn {
     animation: fadeIn 0.8s ease-out forwards;
     transition: all 1s ease;
-}
+} */
 
 
 .fade-in-card {
-    animation: fadeIn 0.5s ease-out forwards; /* Adjust duration and timing function as needed */
+    animation: fadeIn 0.5s ease-out forwards;
+    opacity: 0; /* Adjust duration and timing function as needed */
 }
 
 /* In your global CSS file (e.g., globals.css) */

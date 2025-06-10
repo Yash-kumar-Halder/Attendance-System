@@ -10,8 +10,10 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { setData } from '../../Redux/Slices/User/attendance.js';
 import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Import CircularLoader
+import { userAuthRoute } from '@/Utils/authRoute';
 
 const Dashboard = () => {
+    userAuthRoute();
     const dispatch = useAppDispatch();
     const { attendance, totalClasses } = useAppSelector(state => state.attendance);
     const user = useAppSelector(state => state.user);
@@ -39,7 +41,7 @@ const Dashboard = () => {
             // --- Fetch Total Classes Taken ---
             try {
                 const totalClassesRes = await axios.post(
-                    "http://localhost:8000/api/v1/classes/total-class",
+                    "/classes/total-class",
                     {},
                     {
                         headers: { Authorization: `Bearer ${token}` },
@@ -61,7 +63,7 @@ const Dashboard = () => {
             if (user.role === "student") {
                 try {
                     const userClassesRes = await axios.post(
-                        "http://localhost:8000/api/v1/classes/history",
+                        "/classes/history",
                         {},
                         {
                             headers: { Authorization: `Bearer ${token}` },
