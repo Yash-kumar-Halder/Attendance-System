@@ -7,7 +7,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import axios from 'axios';
 
 //Default / Common URL
-axios.defaults.baseURL = "http://localhost:8000/api/v1"
+axios.defaults.baseURL = "https://attendance-system-backend-gamma.vercel.app/api/v1"
 
 
 createRoot(document.getElementById('root')).render(
