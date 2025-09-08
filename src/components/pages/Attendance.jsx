@@ -10,7 +10,7 @@ const Attendance = () => {
   userAuthRoute();
   const [attendance, setAttendance] = useState([]);
   const [totalClasses, setTotalClasses] = useState([])
-  
+
   const dispatch = useAppDispatch();
 
   const fetchData = async () => {
@@ -45,9 +45,9 @@ const Attendance = () => {
 
   useEffect(() => {
     fetchData();
-  
+
   }, [])
-  
+
 
 
   return (
@@ -55,9 +55,9 @@ const Attendance = () => {
       <h1 className='text-xl text-[var(--white-8)] font-extrabold mb-6 ' >Attendance</h1>
       <div className="flex gap-4 ">
         <div className='bg-[var(--card)] rounded-md w-[50%] py-4 ' >
-          <CircleProgressBar 
+          <CircleProgressBar
             total={totalClasses.totalTaken}
-          present={attendance.length}
+            present={attendance.length}
             color="text-green-500"
             baseColor="text-orange-400"
             label="Present" />

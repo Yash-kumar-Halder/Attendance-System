@@ -291,9 +291,13 @@ const Classes = () => {
         // }
     };
 
+    
+
     const fetchSubjectDetails = (e) => {
         const scheduleId = e._id;
-        const specificDate = "2025-06-09T18:30:00.000+00:00"; // IMPORTANT: Use 00:00:00.000Z to match your model's date storage
+        const date = new Date();
+        const isoDate = date.toISOString()
+        const specificDate = isoDate;
         fetchAttendanceForSchedule(scheduleId, specificDate);
     }
 

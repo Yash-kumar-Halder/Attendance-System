@@ -32,8 +32,10 @@ import {
 } from '../ui/dropdown-menu';
 import SubjectCard from '../Skeleton/SubjectCard';
 import CircularLoader from '../MyComponents/CircularLoader';
+import { useNavigate } from "react-router-dom";
 
 const Subject = () => {
+    const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.user);
     const reduxSubjects = useAppSelector((state) => state.subject.subjects || []);
@@ -504,6 +506,7 @@ const Subject = () => {
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
+                    
                     <AlertDialog open={openScheduleDialog} onOpenChange={setOpenScheduleDialog}>
                         <AlertDialogContent>
                             <AlertDialogHeader>
@@ -612,6 +615,7 @@ const Subject = () => {
                             <AlertDialogFooter>
                                 <AlertDialogCancel onClick={() => {
                                     setOpenSubjectScheduleDialog(false);
+                                    navigate("/add-subject")
                                 }}
                                     className="cursor-pointer"
                                 >Close</AlertDialogCancel>

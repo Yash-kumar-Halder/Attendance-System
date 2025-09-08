@@ -10,7 +10,7 @@ const AllStudents = () => {
     useTeacherRoute();
     const [allStudents, setAllStudents] = useState([]);
     const [isLoading, setIsLoading] = useState(true); // New state for loading
-    const [visibleStudentCount, setVisibleStudentCount] = useState(0); // New state for staggered rendering
+    const [visibleStudentCount, setVisibleStudentCount] = useState(0);
 
 
     const getValidToken = async () => {
@@ -53,6 +53,7 @@ const AllStudents = () => {
 
             if (response.data.success) {
                 const students = response.data.students;
+                // console.log(students)
                 setAllStudents(students);
                 setVisibleStudentCount(0); // Reset for new data load
             }
@@ -115,6 +116,8 @@ const AllStudents = () => {
                                             {e.semester}</span>
                                         <span className="bg-teal-200 text-xs px-3 rounded-sm py-1">
                                             Reg: {e.regNo}</span>
+                                        {/* <span className="bg-teal-200 text-xs px-3 rounded-sm py-1">TotalClass: {e.totalClass.totalTaken}</span> */}
+                                        <span className="bg-[var(--b-chips)] text-[var(--white-7)] text-sm px-3 rounded-sm py-1">Total Attendance: <b className='text-[var(--p-t-chips)] ' >   {e.totalAttent}</b> out of <b className='text-[var(--o-t-chips)] ' >{e.totalClass.totalTaken}</b></span>
                                     </div>
                                 </div>
                                 {/* <Ellipsis className="cursor-pointer text-[var(--white-9)]" /> */}

@@ -5,7 +5,7 @@ import BG1 from "../../assets/Images/bg-1.jpeg";
 import BG3 from "../../assets/Images/bg-3.jpeg";
 import ChartLine1 from "../../assets/Images/chart-line-1.jpeg";
 import { useAppSelector, useAppDispatch } from '@/hooks';
-import { getValidToken } from '@/Utils/getValidToken';
+import { getValidToken } from '../../Utils/getValidToken.js';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { setData } from '../../Redux/Slices/User/attendance.js';
@@ -113,14 +113,14 @@ const Dashboard = () => {
                 <CircularLoader />
             ) : (
                 <div className={`w-full flex flex-wrap gap-[2%] ${contentVisible ? 'fade-in' : 'opacity-0'}`}>
-                    <div className='w-[55%] cursor-pointer transition duration-300 hover:scale-[1.03] overflow-hidden aspect-[3/1.65] bg-[var(--card)] rounded-md my-[1.5%]'>
-                        <CircleProgressBar
-                            total={totalClassesValue}
-                            present={presentClassesCount}
-                            color="text-green-500"
-                            baseColor="text-orange-400"
-                            label="Present"
-                        />
+                    <div className='w-[55%] cursor-pointer transition duration-300 hover:scale-[1.03] overflow-hidden aspect-[3/1.65] bg-[var(--card)] rounded-md my-[1.5%] flex items-center justify-center'>
+                            {user.role == "teacher" ? <h1 className='text-2xl text-[var(--white-9)] ' >Thich content only for student</h1> : <CircleProgressBar
+                                total={totalClassesValue}
+                                present={presentClassesCount}
+                                color="text-green-500"
+                                baseColor="text-orange-400"
+                                label="Present"
+                            />}
                     </div>
                     <div className='w-[40%] flex flex-wrap gap-[4%] justify-between aspect-[3/1.8] rounded-md my-[1.5%]'>
                         <div className='w-[48%] h-[48.1%] bg-[var(--card)] rounded-md overflow-hidden'>

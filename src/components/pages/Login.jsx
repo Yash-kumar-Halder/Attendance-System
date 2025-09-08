@@ -28,7 +28,7 @@ const Login = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post("/auth/login", { data }, {
+            const response = await axios.post("/auth/login", data, {
                 withCredentials: true,
             });
 
@@ -50,7 +50,7 @@ const Login = () => {
 
                     localStorage.setItem("accessToken", accessToken);
 
-                    navigate("/dashboard");
+                    navigate("/classes");
                     toast.success(`Welcome back, ${user.name}`);
             } else {
                 throw new Error("Invalid response from server."); // Throws error for unexpected response

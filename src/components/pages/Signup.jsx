@@ -12,7 +12,6 @@ import { useAppSelector, useAppDispatch } from "../../hooks/index.js";
 import { loginSuccess } from "@/Redux/Slices/User/user.js";
 import { toast } from 'sonner';
 import { Toaster } from '../ui/sonner';
-import { registerUser } from "../../Freatures/Auth/authService.js";
 
 const Signup = () => {
 
@@ -114,7 +113,7 @@ const Signup = () => {
 
                 localStorage.setItem("accessToken", accessToken);
 
-                navigate("/dashboard");
+                navigate("/classes");
                 toast.success(`Welcome back, ${user.name}`);
             } else {
                 throw new Error("Invalid response from server."); // Throws error for unexpected response

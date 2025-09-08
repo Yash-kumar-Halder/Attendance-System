@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { PersistGate } from 'redux-persist/integration/react';
 import axios from 'axios';
 
+//Default / Common URL
 axios.defaults.baseURL = "http://localhost:8000/api/v1"
 
 

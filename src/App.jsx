@@ -5,7 +5,6 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Login from './components/pages/Login'
 import Signup from './components/pages/Signup'
 import Classes from './components/pages/ActiveClasses'
-import Dashboard from './components/pages/Dashboard'
 import "./Styles/Root.css"
 import LandingPage from './components/pages/LandingPage'
 import Leaderboard from './components/pages/Leaderboard'
@@ -14,6 +13,7 @@ import Subject from './components/pages/Subject'
 import AllStudents from './components/pages/AllStudents'
 import ClassHistory from './components/pages/ClassHistory'
 import Attendance from './components/pages/Attendance'
+import Anouncement from './components/pages/Anouncement'
 
 
 function App() {
@@ -27,7 +27,7 @@ function App() {
             <Route path='/' element={<LandingPage />} ></Route>
             <Route path='login' element={<Login />} ></Route>
             <Route path='signup' element={<Signup />} ></Route>
-            <Route path='dashboard' element={<Dashboard />} ></Route>
+            {/* <Route path='dashboard' element={<Dashboard />} ></Route> */}
             <Route path='leaderboard' element={<Leaderboard />} ></Route>
             <Route path='classes' element={<Classes />} ></Route>
             <Route path='all-students' element={<AllStudents />} ></Route>
@@ -35,6 +35,7 @@ function App() {
             <Route path='add-subject' element={<Subject />} ></Route>
             <Route path='class-history' element={<ClassHistory />} ></Route>
             <Route path='attendance' element={<Attendance />} ></Route>
+            <Route path='anouncement' element={<Anouncement />} ></Route>
           </Route>
         </Routes>
       </BrowserRouter>

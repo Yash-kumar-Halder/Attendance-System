@@ -24,8 +24,6 @@ import {
 import { toast } from 'sonner';
 import CircularLoader from '../MyComponents/CircularLoader.jsx'; // Assuming this path is correct
 import { userAuthRoute } from '@/Utils/authRoute';
-// If using CSS Modules, uncomment the line below:
-// import styles from './UpcomingClasses.module.css';
 
 const UpcomingClasses = () => {
     userAuthRoute();
@@ -36,13 +34,7 @@ const UpcomingClasses = () => {
     const [subjects, setSubjects] = useState([]);
     const [filters, setFilters] = useState({ subject: '', dept: '', sem: '', day: '' });
     const [isLoading, setIsLoading] = useState(true);
-    const [visibleCardCount, setVisibleCardCount] = useState(0); // New state for staggered rendering
-
-    /**
-     * Fetches the upcoming classes from the backend API.
-     * Sets loading state, retrieves token, makes the API call, and updates upcomingClasses state.
-     * Resets visibleCardCount for animation on new data fetch.
-     */
+    const [visibleCardCount, setVisibleCardCount] = useState(0); 
     const fetchUpcomingClasses = async () => {
         try {
             setIsLoading(true);
@@ -53,7 +45,7 @@ const UpcomingClasses = () => {
             });
             if (response.data.success) {
                 setUpcomingClasses(response.data.upcomingClasses);
-                setVisibleCardCount(0); // Reset for new data load
+                setVisibleCardCount(0);
             }
         } catch (error) {
             console.error('Error fetching upcoming classes', error);
@@ -63,10 +55,6 @@ const UpcomingClasses = () => {
         }
     };
 
-    /**
-     * Fetches all available subjects from the backend.
-     * Updates the subjects state.
-     */
     const fetchSubjectsData = async () => {
         try {
             const data = await fetchSubjects(user);
@@ -77,10 +65,6 @@ const UpcomingClasses = () => {
         }
     };
 
-    /**
-     * Initial data load on component mount.
-     * Fetches both subjects and upcoming classes concurrently.
-     */
     useEffect(() => {
         const loadData = async () => {
             setIsLoading(true);
@@ -89,9 +73,6 @@ const UpcomingClasses = () => {
         loadData();
     }, []);
 
-    /**
-     * Filters the upcoming classes based on the selected filter criteria.
-     */
     const filteredClasses = upcomingClasses.filter((cls) => {
         if (user.role !== 'teacher') return true;
         const { subject, dept, sem, day } = filters;
@@ -103,29 +84,19 @@ const UpcomingClasses = () => {
         );
     });
 
-    /**
-     * Effect for staggered rendering of class cards.
-     * Increments `visibleCardCount` over time to reveal cards one by one.
-     */
     useEffect(() => {
         if (!isLoading && filteredClasses.length > 0 && visibleCardCount < filteredClasses.length) {
             const timer = setTimeout(() => {
                 setVisibleCardCount((prevCount) => prevCount + 1);
-            }, 100); // Adjust delay here (e.g., 100ms per card)
-            return () => clearTimeout(timer); // Cleanup on unmount or re-render
+            }, 100); 
+            return () => clearTimeout(timer); 
         }
-        // If loading starts or no filtered classes, reset visibleCardCount to 0
         if ((!isLoading && filteredClasses.length === 0) || isLoading) {
             setVisibleCardCount(0);
         }
     }, [isLoading, filteredClasses, visibleCardCount]);
 
 
-    /**
-     * Handles the cancellation of a subject.
-     * Makes an API call to cancel the class and updates the local state.
-     * @param {object} data - The class object to be cancelled.
-     */
     const handleCancelSubject = async (data) => {
         try {
             const token = await getValidToken();
@@ -164,37 +135,24 @@ const UpcomingClasses = () => {
         }
     };
 
-    /**
-     * Clears all applied filters and resets the visible card count.
-     */
     const clearFilter = () => {
         setFilters({ subject: '', dept: '', sem: '', day: '' });
-        setVisibleCardCount(0); // Reset animation when filters clear
+        setVisibleCardCount(0);
     };
 
-    /**
-     * Helper function to format minutes (e.g., 630 for 10:30 AM) into a time string (e.g., "10:30 AM").
-     * @param {number} minutes - Total minutes from midnight.
-     * @returns {string} Formatted time string.
-     */
     const formatMinutesToTime = (minutes) => {
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
-        const h = hours % 12 || 12; // Convert 24hr to 12hr format, 0 becomes 12
+        const h = hours % 12 || 12;
         const ampm = hours >= 12 ? "PM" : "AM";
         return `${h}:${mins.toString().padStart(2, "0")} ${ampm}`;
     };
 
-    /**
-     * Renders a single upcoming class card.
-     * @param {object} e - The class object.
-     * @param {number} idx - The index for staggered animation.
-     */
     const renderCard = (e, idx) => (
         <div
             key={idx}
             className={`w-full h-fit px-5 py-2 mb-3 rounded-md bg-[var(--card)] fade-in-card`}
-            style={{ animationDelay: `${idx * 50}ms` }} // Apply staggered animation delay
+            style={{ animationDelay: `${idx * 50}ms` }}
         >
             <div className="flex justify-between items-start">
                 <div className="w-full">
@@ -211,10 +169,9 @@ const UpcomingClasses = () => {
                         </h2>
                         <div className="flex gap-2">
                             <span className="text-xs bg-[var(--yg-chips)] border border-[var(--yg-b-chips)] h-fit px-2.5 py-0.5 text-[var(--yg-t-chips)] rounded-full">{e.day}</span>
-                            {/* Display date in DD-MM-YYYY format and time in HH:MM AM/PM */}
                             <span className="text-xs bg-[var(--p-chips)] py-0.5 h-fit px-2 border border-[var(--p-b-chips)] text-[var(--p-t-chips)] rounded-full">
                                 {new Date(e.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                {' '} {/* Add a space between date and time */}
+                                {' '}
                                 {formatMinutesToTime(e.startTime)} - {formatMinutesToTime(e.endTime)}
                             </span>
                             <span className="bg-[var(--white-4)] px-4 py-0 text-xs text-center content-center rounded-2xl text-[var(--white-7)] border border-[var(--white-5)]">
@@ -237,7 +194,6 @@ const UpcomingClasses = () => {
                         <div>
                             <h3 className="text-md text-[var(--white-6)] mb-1 flex items-center gap-1">Teacher: {e.teacher}<PenIcon size={12} /></h3>
                             <div className="text-xs flex gap-1.5 mb-1">
-                                {/* The duration span remains as is */}
                                 <p className="w-fit px-2 py-0.5 bg-[var(--b-chips)] rounded-sm text-[var(--white-7)] font-semibold border border-[var(--b-b-chips)]">
                                     Duration{' '}
                                     <b>
